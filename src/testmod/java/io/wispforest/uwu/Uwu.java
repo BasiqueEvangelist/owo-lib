@@ -5,7 +5,6 @@ import com.mojang.authlib.GameProfile;
 import io.wispforest.owo.itemgroup.Icon;
 import io.wispforest.owo.itemgroup.OwoItemGroup;
 import io.wispforest.owo.itemgroup.gui.ItemGroupButton;
-import io.wispforest.owo.itemgroup.gui.ItemGroupTab;
 import io.wispforest.owo.network.OwoNetChannel;
 import io.wispforest.owo.offline.OfflineAdvancementLookup;
 import io.wispforest.owo.offline.OfflineDataLookup;
@@ -15,8 +14,7 @@ import io.wispforest.owo.particles.systems.ParticleSystemController;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import io.wispforest.owo.util.TagInjector;
 import io.wispforest.uwu.items.UwuItems;
-import io.wispforest.uwu.network.UwuNetworkExample;
-import io.wispforest.uwu.network.UwuOptionalNetExample;
+import io.wispforest.uwu.network.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
@@ -34,7 +32,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tag.Tag;
 import net.minecraft.tag.TagKey;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -123,7 +120,7 @@ public class Uwu implements ModInitializer {
             Float.NEGATIVE_INFINITY, Double.NaN, false, new Identifier("uowou", "hahayes"), Collections.emptyMap(),
             new int[]{10, 20}, new String[]{"trollface"}, new short[]{1, 2, 3}, new long[]{Long.MAX_VALUE, 1, 3}, new byte[]{1, 2, 3, 4},
             Optional.of("NullableString"), Optional.empty(),
-            ImmutableList.of(new BlockPos(9786, 42, 9234)));
+            ImmutableList.of(new BlockPos(9786, 42, 9234)), new SealedSubclassOne("basede", 10), new SealedSubclassTwo(10, null));
 
     public static final ParticleSystemController PARTICLE_CONTROLLER = new ParticleSystemController(new Identifier("uwu", "particles"));
     public static final ParticleSystem<Void> CUBE = PARTICLE_CONTROLLER.register(Void.class, (world, pos, data) -> {
@@ -163,6 +160,7 @@ public class Uwu implements ModInitializer {
 
         CHANNEL.registerServerbound(TestMessage.class, (message, access) -> {
             access.player().sendMessage(Text.of(String.valueOf(message.bite)), false);
+            access.player().sendMessage(Text.of(String.valueOf(message)), false);
         });
 
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER && WE_TESTEN_HANDSHAKE) {
@@ -218,6 +216,6 @@ public class Uwu implements ModInitializer {
                               Map<String, Integer> map,
                               int[] arr1, String[] arr2, short[] arr3, long[] arr4, byte[] arr5,
                               Optional<String> optional1, Optional<String> optional2,
-                              List<BlockPos> posses) {}
+                              List<BlockPos> posses, SealedTestClass sealed1, SealedTestClass sealed2) {}
 
 }
