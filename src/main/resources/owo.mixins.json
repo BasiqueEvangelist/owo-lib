@@ -1,32 +1,34 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "io.wispforest.owo.mixin",
-  "compatibilityLevel": "JAVA_16",
-  "mixins": [
-    "ClientConnectionMixin",
-    "ScreenHandlerInvoker",
-    "TagGroupLoaderMixin",
-    "itemgroup.FabricItemGroupBuilderMixin",
-    "itemgroup.ItemMixin",
-    "itemgroup.ItemSettingsMixin",
-    "offline.AdvancementProgressAccessor",
-    "offline.PlayerAdvancementTrackerMixin",
-    "offline.WorldSaveHandlerMixin",
-    "tweaks.EulaReaderMixin",
-    "tweaks.LevelInfoMixin"
-  ],
-  "client": [
-    "MinecraftClientMixin",
-    "TranslationStorageMixin",
-    "itemgroup.CreativeInventoryScreenMixin",
-    "tweaks.OperatingSystemMixin",
-    "tweaks.TextFieldWidgetMixin"
-  ],
-  "server": [
-    "MainMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
+    "required": true,
+    "minVersion": "0.8",
+    "package": "io.wispforest.owo.mixin",
+    "compatibilityLevel": "JAVA_16",
+    "mixins": [
+        "ClientConnectionMixin",
+        "ScreenHandlerInvoker",
+        "ServerPlayerEntityMixin",
+        "SlotAccessor",
+        "TagGroupLoaderMixin",
+        "itemgroup.FabricItemGroupBuilderMixin",
+        "itemgroup.ItemMixin",
+        "itemgroup.ItemSettingsMixin",
+        "offline.AdvancementProgressAccessor",
+        "offline.PlayerAdvancementTrackerMixin",
+        "offline.WorldSaveHandlerMixin",
+        "tweaks.EulaReaderMixin",
+        "tweaks.LevelInfoMixin"
+    ],
+    "client": [
+        "MinecraftClientMixin",
+        "TranslationStorageMixin",
+        "itemgroup.CreativeInventoryScreenMixin",
+        "tweaks.OperatingSystemMixin",
+        "tweaks.TextFieldWidgetMixin"
+    ],
+    "server": [
+        "MainMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
   }
 }
