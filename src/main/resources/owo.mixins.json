@@ -6,9 +6,11 @@
     "mixins": [
         "ClientConnectionMixin",
         "ScreenHandlerInvoker",
-        "ServerPlayerEntityMixin",
+        "PlayerEntityMixin",
         "SlotAccessor",
         "TagGroupLoaderMixin",
+        "ServerPlayerEntityAccessor",
+        "DefaultedListAccessor",
         "itemgroup.FabricItemGroupBuilderMixin",
         "itemgroup.ItemMixin",
         "itemgroup.ItemSettingsMixin",

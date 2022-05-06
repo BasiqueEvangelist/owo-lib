@@ -1,0 +1,586 @@
+package io.wispforest.owo.screen;
+
+import io.wispforest.owo.access.ExtendedPlayerEntity;
+import io.wispforest.owo.mixin.ServerPlayerEntityAccessor;
+import io.wispforest.owo.mixin.SlotAccessor;
+import io.wispforest.owo.network.NetworkException;
+import io.wispforest.owo.screen.action.*;
+import io.wispforest.owo.util.MouseButton;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.StackReference;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.slot.Slot;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.ClickType;
+import net.minecraft.util.collection.DefaultedList;
+
+import java.util.*;
+import java.util.function.Consumer;
+
+import static net.minecraft.screen.ScreenHandler.canInsertItemIntoSlot;
+
+public abstract class ServerScreen<T extends ServerScreen<T, D>, D> {
+    protected final ServerScreenType<T, D> type;
+    protected int screenId;
+    protected final PlayerEntity player;
+    private final D data;
+    protected ItemStack cursorStack = ItemStack.EMPTY;
+    protected ItemStack prevCursorStack = ItemStack.EMPTY;
+    protected final DefaultedList<Slot> slots = DefaultedList.of();
+    protected final List<ItemStack> prevItemStacks = new ArrayList<>();
+    protected final Map<Class<?>, ServerScreenAction<?>> actions = new HashMap<>();
+    private final List<ServerScreenProperty<?>> properties = new ArrayList<>();
+    private QuickCraftStage quickCraftStage = QuickCraftStage.STARTING;
+    private final Set<Slot> quickCraftSlots = new HashSet<>();
+    private int quickCraftButton = 0;
+
+    protected ServerScreen(ServerScreenType<T, D> type, int screenId, PlayerEntity player, D data) {
+        this.type = type;
+        this.screenId = screenId;
+        this.data = data;
+        this.player = player;
+
+        addServerAction(PickupSlotAction.class, this::doPickupAction);
+        addServerAction(SwapSlotsAction.class, this::swapSlots);
+        addServerAction(ThrowSlotAction.class, this::doThrowAction);
+        addServerAction(CloneSlotAction.class, this::doClone);
+        addServerAction(PickupAllAction.class, this::pickupAllAction);
+        addServerAction(QuickMoveAction.class, this::doQuickMoveAction);
+    }
+
+    public PlayerEntity getPlayer() {
+        return player;
+    }
+
+    public ServerScreenType<T, D> getType() {
+        return type;
+    }
+
+    public static int getNextScreenId(ServerPlayerEntity player) {
+        var accessor = (ServerPlayerEntityAccessor) player;
+
+        accessor.invokeIncrementScreenHandlerSyncId();
+        return accessor.getScreenHandlerSyncId();
+    }
+
+    public void open() {
+        if (!player.world.isClient)
+            ((ServerPlayerEntity) player).networkHandler.sendPacket(type.createOpenPacket(data, screenId));
+
+        ((ExtendedPlayerEntity) player).owo$setCurrentServerScreen(this);
+        player.currentScreenHandler = new FakeScreenHandler(this);
+
+        if (player.world.isClient)
+            openOnClient();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Environment(EnvType.CLIENT)
+    private void openOnClient() {
+        MinecraftClient.getInstance().setScreen(getType().screenFactory.apply((T) this));
+    }
+
+    protected <P> ServerScreenProperty<P> addProperty(Class<P> klass, P defaultValue) {
+        ServerScreenProperty<P> prop = new ServerScreenProperty<>(klass, defaultValue);
+        properties.add(prop);
+        return prop;
+    }
+
+    protected Slot addSlot(Slot slot) {
+        slots.add(slot);
+        prevItemStacks.add(ItemStack.EMPTY);
+
+        return slot;
+    }
+
+    public DefaultedList<Slot> getSlots() {
+        return slots;
+    }
+
+    protected <R extends Record> void addClientActionDeferred(Class<R> klass) {
+        if (actions.containsKey(klass)) {
+            throw new IllegalStateException(klass + " is already registered as an action!");
+        }
+
+        ServerScreenAction<R> action = new ServerScreenAction<>(actions.size(), EnvType.CLIENT, klass, null, this);
+        actions.put(klass, action);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <R extends Record> void addClientAction(Class<R> klass, Consumer<R> executor) {
+        var prevAction = (ServerScreenAction<R>) actions.get(klass);
+
+        if (prevAction != null) {
+            if (prevAction.executor == null) {
+                prevAction.executor = executor;
+
+                return;
+            } else {
+                throw new IllegalStateException(klass + " is already registered as an action!");
+            }
+        }
+
+        ServerScreenAction<R> action = new ServerScreenAction<>(actions.size(), EnvType.CLIENT, klass, executor, this);
+        actions.put(klass, action);
+    }
+
+    protected <R extends Record> void addServerAction(Class<R> klass, Consumer<R> executor) {
+        if (actions.containsKey(klass)) {
+            throw new IllegalStateException(klass + " is already registered as an action!");
+        }
+
+        ServerScreenAction<R> action = new ServerScreenAction<>(actions.size(), EnvType.SERVER, klass, executor, this);
+        actions.put(klass, action);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <R extends Record> void runAction(R data) {
+        final var actionClass = data.getClass();
+
+        if (!this.actions.containsKey(actionClass)) {
+            throw new NetworkException("Action class '" + actionClass + "' is not registered");
+        }
+
+        ((ServerScreenAction<R>) actions.get(data.getClass())).run(data);
+    }
+
+    public ItemStack quickTransferFrom(PlayerEntity player, int index) {
+        return this.slots.get(index).getStack();
+    }
+
+    public ItemStack getCursorStack() {
+        return cursorStack;
+    }
+
+    public StackReference getCursorStackReference() {
+        return new StackReference() {
+            @Override
+            public ItemStack get() {
+                return cursorStack;
+            }
+
+            @Override
+            public boolean set(ItemStack stack) {
+                cursorStack = stack;
+                return true;
+            }
+        };
+    }
+
+    private void checkQuickCraft() {
+        if (this.quickCraftStage != QuickCraftStage.STARTING) {
+            this.endQuickCraft();
+        }
+    }
+
+    protected boolean insertItem(ItemStack sourceStack, int startIndex, int endIndex, boolean fromLast) {
+        boolean changed = false;
+        int step = fromLast ? -1 : 1;
+
+        int i = fromLast ? endIndex - 1 : startIndex;
+
+        if (sourceStack.isStackable()) {
+            while(!sourceStack.isEmpty() && (fromLast ? i >= startIndex : i < endIndex)) {
+                Slot slot = this.slots.get(i);
+                ItemStack slotStack = slot.getStack();
+                if (!slotStack.isEmpty() && ItemStack.canCombine(sourceStack, slotStack)) {
+                    int totalCount = slotStack.getCount() + sourceStack.getCount();
+
+                    if (totalCount <= sourceStack.getMaxCount()) {
+                        sourceStack.setCount(0);
+                        slotStack.setCount(totalCount);
+                        slot.markDirty();
+                        return true;
+                    } else if (slotStack.getCount() < sourceStack.getMaxCount()) {
+                        sourceStack.decrement(sourceStack.getMaxCount() - slotStack.getCount());
+                        slotStack.setCount(sourceStack.getMaxCount());
+                        slot.markDirty();
+                        changed = true;
+                    }
+                }
+
+                i += step;
+            }
+        }
+
+        if (sourceStack.isEmpty()) return changed;
+
+        i = fromLast ? endIndex - 1 : startIndex;
+
+        while (fromLast ? i >= startIndex : i < endIndex) {
+            Slot slot = this.slots.get(i);
+            ItemStack slotStack = slot.getStack();
+            if (slotStack.isEmpty() && slot.canInsert(sourceStack)) {
+                slot.setStack(sourceStack.split(Math.min(sourceStack.getCount(), slot.getMaxItemCount())));
+                slot.markDirty();
+                return true;
+            }
+
+            i += step;
+        }
+
+        return changed;
+    }
+
+    private void doQuickMoveAction(QuickMoveAction action) {
+        checkQuickCraft();
+
+        if (action.slotIndex() < 0) return;
+
+        Slot slot = slots.get(action.slotIndex());
+
+        if (!slot.canTakeItems(player)) return;
+
+        ItemStack stack;
+
+        do {
+            stack = this.quickTransferFrom(player, action.slotIndex());
+        } while (!stack.isEmpty() && ItemStack.areItemsEqualIgnoreDamage(slot.getStack(), stack));
+    }
+
+    private void pickupAllAction(PickupAllAction action) {
+        checkQuickCraft();
+
+        if (action.slotIndex() < 0) return;
+        Slot slotStack = this.slots.get(action.slotIndex());
+        if (cursorStack.isEmpty() || (slotStack.hasStack() && !slotStack.canTakeItems(player))) return;
+
+        int startSlot = action.button() == MouseButton.LEFT ? 0 : this.slots.size() - 1;
+        int step = action.button() == MouseButton.LEFT ? 1 : -1;
+
+        for (int tryNum = 0; tryNum < 2; ++tryNum) {
+            for (int p = startSlot; p >= 0 && p < this.slots.size() && cursorStack.getCount() < cursorStack.getMaxCount(); p += step) {
+                Slot otherSlot = this.slots.get(p);
+
+                if (!otherSlot.hasStack() || !canInsertItemIntoSlot(otherSlot, cursorStack, true) || !otherSlot.canTakeItems(player) || !this.canInsertIntoSlot(cursorStack, otherSlot))
+                    continue;
+
+                ItemStack otherSlotStack = otherSlot.getStack();
+
+                if (tryNum == 0 && otherSlotStack.getCount() == otherSlotStack.getMaxCount())
+                    continue;
+
+                ItemStack takenStack = otherSlot.takeStackRange(otherSlotStack.getCount(), cursorStack.getMaxCount() - cursorStack.getCount(), player);
+                cursorStack.increment(takenStack.getCount());
+            }
+        }
+    }
+
+    private void doThrowAction(ThrowSlotAction action) {
+        checkQuickCraft();
+
+        if (!this.getCursorStack().isEmpty() || action.slotIndex() < 0) return;
+        Slot stack = this.slots.get(action.slotIndex());
+        int count = action.throwAll() ? 1 : stack.getStack().getCount();
+        ItemStack droppedStack = stack.takeStackRange(count, Integer.MAX_VALUE, player);
+        player.dropItem(droppedStack, true);
+    }
+
+    private void doClone(CloneSlotAction action) {
+        checkQuickCraft();
+
+        if (!player.getAbilities().creativeMode || !this.getCursorStack().isEmpty() || action.slotIndex() < 0) return;
+
+        Slot sourceStack = this.slots.get(action.slotIndex());
+        if (sourceStack.hasStack()) {
+            ItemStack newStack = sourceStack.getStack().copy();
+            newStack.setCount(newStack.getMaxCount());
+            cursorStack = newStack;
+        }
+    }
+
+    private void doPickupAction(PickupSlotAction action) {
+        checkQuickCraft();
+
+        if (action.slotIndex() == -1) { // Drop the item.
+            if (!cursorStack.isEmpty()) {
+                if (action.button() == MouseButton.LEFT) {
+                    player.dropItem(this.getCursorStack(), true);
+                    cursorStack = ItemStack.EMPTY;
+                } else {
+                    player.dropItem(this.getCursorStack().split(1), true);
+                }
+            }
+            return;
+        }
+
+        if (action.slotIndex() < 0) return;
+
+        Slot slot = this.slots.get(action.slotIndex());
+        ClickType clickType = MouseButton.toClickType(action.button());
+        ItemStack slotStack = slot.getStack();
+        player.onPickupSlotClick(cursorStack, slot.getStack(), clickType);
+
+        slot.markDirty();
+
+        if (cursorStack.onStackClicked(slot, clickType, player) || slotStack.onClicked(cursorStack, slot, clickType, player, this.getCursorStackReference()))
+            return;
+
+        if (slotStack.isEmpty()) {
+            if (!cursorStack.isEmpty())
+                cursorStack = slot.insertStack(cursorStack, action.button() == MouseButton.LEFT ? cursorStack.getCount() : 1);
+
+            return;
+        }
+
+        if (!slot.canTakeItems(player)) return;
+
+        if (cursorStack.isEmpty()) {
+            slot
+                .tryTakeStackRange(
+                    action.button() == MouseButton.LEFT ? slotStack.getCount() : (slotStack.getCount() + 1) / 2,
+                    Integer.MAX_VALUE,
+                    player
+                ).ifPresent(stack -> {
+                    cursorStack = stack;
+                    slot.onTakeItem(player, stack);
+                });
+        } else if (slot.canInsert(cursorStack)) {
+            if (ItemStack.canCombine(slotStack, cursorStack)) {
+                int n = action.button() == MouseButton.LEFT ? cursorStack.getCount() : 1;
+                cursorStack = slot.insertStack(cursorStack, n);
+            } else if (cursorStack.getCount() <= slot.getMaxItemCount(cursorStack)) {
+                slot.setStack(cursorStack);
+                cursorStack = slotStack;
+            }
+        } else if (ItemStack.canCombine(slotStack, cursorStack)) {
+            slot.tryTakeStackRange(slotStack.getCount(), cursorStack.getMaxCount() - cursorStack.getCount(), player)
+                .ifPresent(stack -> {
+                    cursorStack.increment(stack.getCount());
+                    slot.onTakeItem(player, stack);
+                });
+        }
+    }
+
+    private void quickCraftAction(QuickCraftAction action) {
+        QuickCraftStage prevStage = this.quickCraftStage;
+        this.quickCraftStage = action.stage();
+
+        if ((prevStage != QuickCraftStage.IN_PROGRESS || action.stage() != QuickCraftStage.ENDING) && prevStage != action.stage()) {
+            this.endQuickCraft();
+            return;
+        }
+
+        if (this.getCursorStack().isEmpty()) {
+            this.endQuickCraft();
+            return;
+        }
+
+        switch (this.quickCraftStage) {
+            case STARTING -> {
+                this.quickCraftButton = action.button();
+                if (action.button() == MouseButton.MIDDLE && !player.getAbilities().creativeMode) {
+                    this.endQuickCraft();
+                    return;
+                }
+                this.quickCraftStage = QuickCraftStage.IN_PROGRESS;
+                this.quickCraftSlots.clear();
+            }
+            case IN_PROGRESS -> {
+                Slot slot = this.slots.get(action.slotIndex());
+                ItemStack itemStack = this.getCursorStack();
+                if (canInsertItemIntoSlot(slot, itemStack, true)
+                    && slot.canInsert(itemStack)
+                    && (this.quickCraftButton == MouseButton.MIDDLE || itemStack.getCount() > this.quickCraftSlots.size())
+                    && this.canInsertIntoSlot(slot)) {
+                    this.quickCraftSlots.add(slot);
+                }
+            }
+            case ENDING -> {
+                if (!this.quickCraftSlots.isEmpty()) {
+                    if (this.quickCraftSlots.size() == 1) {
+                        int j = this.quickCraftSlots.iterator().next().id;
+                        this.endQuickCraft();
+                        this.doPickupAction(new PickupSlotAction(j, quickCraftButton));
+                        return;
+                    }
+
+                    ItemStack cursorStackCopy = this.getCursorStack().copy();
+                    int cursorStackCount = this.getCursorStack().getCount();
+
+                    for (Slot otherSlot : this.quickCraftSlots) {
+                        if (otherSlot != null
+                            && canInsertItemIntoSlot(otherSlot, cursorStack, true)
+                            && otherSlot.canInsert(cursorStack)
+                            && (this.quickCraftButton == MouseButton.MIDDLE || cursorStack.getCount() >= this.quickCraftSlots.size())
+                            && this.canInsertIntoSlot(otherSlot)) {
+                            ItemStack newStack = cursorStackCopy.copy();
+                            int oldSize = otherSlot.hasStack() ? otherSlot.getStack().getCount() : 0;
+                            ScreenHandler.calculateStackSize(this.quickCraftSlots, this.quickCraftButton, newStack, oldSize);
+                            int maxCount = Math.min(newStack.getMaxCount(), otherSlot.getMaxItemCount(newStack));
+                            if (newStack.getCount() > maxCount) {
+                                newStack.setCount(maxCount);
+                            }
+
+                            cursorStackCount -= newStack.getCount() - oldSize;
+                            otherSlot.setStack(newStack);
+                        }
+                    }
+
+                    cursorStackCopy.setCount(cursorStackCount);
+                    cursorStack = cursorStackCopy;
+                }
+                this.endQuickCraft();
+            }
+            default -> this.endQuickCraft();
+        }
+    }
+
+    public void endQuickCraft() {
+        this.quickCraftStage = QuickCraftStage.STARTING;
+        this.quickCraftSlots.clear();
+    }
+
+    public void swapSlots(SwapSlotsAction action) {
+        checkQuickCraft();
+
+        PlayerInventory playerInventory = player.getInventory();
+        Slot slotA = this.slots.get(action.slotIndexA());
+        ItemStack stackB = playerInventory.getStack(action.slotIndexB());
+        ItemStack stackA = slotA.getStack();
+        if (stackB.isEmpty() && stackA.isEmpty()) return;
+
+        if (stackB.isEmpty()) {
+            if (slotA.canTakeItems(player)) {
+                playerInventory.setStack(action.slotIndexB(), stackA);
+                ((SlotAccessor) slotA).invokeOnTake(stackA.getCount());
+                slotA.setStack(ItemStack.EMPTY);
+                slotA.onTakeItem(player, stackA);
+            }
+        } else if (stackA.isEmpty()) {
+            if (slotA.canInsert(stackB)) {
+                int maxCount = slotA.getMaxItemCount(stackB);
+
+                if (stackB.getCount() > maxCount) {
+                    slotA.setStack(stackB.split(maxCount));
+                } else {
+                    playerInventory.setStack(action.slotIndexB(), ItemStack.EMPTY);
+                    slotA.setStack(stackB);
+                }
+            }
+        } else if (slotA.canTakeItems(player) && slotA.canInsert(stackB)) {
+            int o = slotA.getMaxItemCount(stackB);
+            if (stackB.getCount() > o) {
+                slotA.setStack(stackB.split(o));
+                slotA.onTakeItem(player, stackA);
+                if (!playerInventory.insertStack(stackA)) {
+                    player.dropItem(stackA, true);
+                }
+            } else {
+                playerInventory.setStack(action.slotIndexB(), stackA);
+                slotA.setStack(stackB);
+                slotA.onTakeItem(player, stackA);
+            }
+        }
+    }
+
+    public boolean canInsertIntoSlot(Slot slot) {
+        return true;
+    }
+
+    public boolean canInsertIntoSlot(ItemStack stack, Slot slot) {
+        return true;
+    }
+
+    public void sync() {
+        int dirtyPropertyCount = 0;
+        int dirtySlotsCount = 0;
+
+        for (var prop : properties) {
+            if (prop.isDirty())
+                dirtyPropertyCount++;
+        }
+
+        for (int i = 0; i < slots.size(); i++) {
+            var slot = slots.get(i);
+
+            if (!ItemStack.areEqual(prevItemStacks.get(i), slot.getStack()))
+                dirtySlotsCount++;
+        }
+
+        if (dirtyPropertyCount == 0 && dirtySlotsCount == 0 && prevCursorStack.equals(cursorStack)) return;
+
+        PacketByteBuf buf = PacketByteBufs.create();
+
+        buf.writeVarInt(screenId);
+
+        if (!prevCursorStack.equals(cursorStack)) {
+            buf.writeBoolean(true);
+
+            buf.writeItemStack(cursorStack);
+
+            prevCursorStack = cursorStack;
+        } else {
+            buf.writeBoolean(false);
+        }
+
+        buf.writeVarInt(dirtyPropertyCount);
+
+        for (int i = 0; i < properties.size(); i++) {
+            var prop = properties.get(i);
+
+            if (!prop.isDirty()) continue;
+
+            buf.writeVarInt(i);
+            prop.write(buf);
+        }
+
+        buf.writeVarInt(dirtySlotsCount);
+
+        for (int i = 0; i < slots.size(); i++) {
+            var slot = slots.get(i);
+
+            if (slot.getStack().equals(prevItemStacks.get(i))) continue;
+
+            prevItemStacks.set(i, slot.getStack().copy());
+            buf.writeVarInt(i);
+            buf.writeItemStack(slot.getStack());
+        }
+
+        ServerPlayNetworking.send((ServerPlayerEntity) player, ServerScreenInternals.SYNC_DATA_ID, buf);
+    }
+
+    public abstract boolean canUse();
+
+    void readSync(PacketByteBuf buf) {
+        boolean cursorStackChanged = buf.readBoolean();
+
+        if (cursorStackChanged) {
+            prevCursorStack = cursorStack = buf.readItemStack();
+        }
+
+        int dirtyPropertyCount = buf.readVarInt();
+
+        for (int i = 0; i < dirtyPropertyCount; i++) {
+            int propertyId = buf.readVarInt();
+            ServerScreenProperty<?> property = properties.get(propertyId);
+
+            property.read(buf);
+        }
+
+        int dirtySlotCount = buf.readVarInt();
+
+        for (int i = 0; i < dirtySlotCount; i++) {
+            int slotId = buf.readVarInt();
+            Slot slot = slots.get(slotId);
+
+            slot.setStack(buf.readItemStack());
+        }
+    }
+
+    static {
+        ServerScreenInternals.register();
+    }
+
+    public void onClose() {
+
+    }
+}

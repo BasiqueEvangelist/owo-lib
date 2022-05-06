@@ -4,8 +4,8 @@ import io.wispforest.owo.screen.ServerScreen;
 import org.jetbrains.annotations.ApiStatus;
 
 public interface ExtendedPlayerEntity {
-    ServerScreen<?> getCurrentServerScreen();
+    ServerScreen<?, ?> owo$getCurrentServerScreen();
 
     @ApiStatus.Internal
-    void setCurrentServerScreen(ServerScreen<?> screen);
+    void owo$setCurrentServerScreen(ServerScreen<?, ?> screen);
 }

@@ -8,11 +8,17 @@ import java.util.Objects;
 public class ServerScreenProperty<T> {
     private final PacketBufSerializer<T> serializer;
     private T value;
+    private final int id;
     private boolean dirty = false;
 
-    ServerScreenProperty(Class<T> klass, T defaultValue) {
+    ServerScreenProperty(Class<T> klass, T defaultValue, int id) {
         this.serializer = PacketBufSerializer.get(klass);
         this.value = defaultValue;
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public T getValue() {

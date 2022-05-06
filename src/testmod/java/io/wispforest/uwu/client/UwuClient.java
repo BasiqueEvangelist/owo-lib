@@ -4,8 +4,10 @@ import io.wispforest.owo.network.OwoNetChannel;
 import io.wispforest.owo.particles.ClientParticles;
 import io.wispforest.owo.particles.systems.ParticleSystemController;
 import io.wispforest.uwu.Uwu;
+import io.wispforest.uwu.client.client.TestClientServerScreen;
 import io.wispforest.uwu.network.UwuNetworkExample;
 import io.wispforest.uwu.network.UwuOptionalNetExample;
+import io.wispforest.uwu.screen.UwuScreenExample;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.text.Text;
@@ -36,6 +38,8 @@ public class UwuClient implements ClientModInitializer {
             ClientParticles.setParticleCount(5);
             ClientParticles.spawnCubeOutline(ParticleTypes.END_ROD, world, pos, 1, .01f);
         });
+
+        UwuScreenExample.TEST_SCREEN.setScreenFactory(TestClientServerScreen::new);
     }
 
     public record WeirdMessage(int e) {}

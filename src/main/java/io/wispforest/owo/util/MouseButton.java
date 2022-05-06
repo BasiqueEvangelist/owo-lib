@@ -2,22 +2,19 @@ package io.wispforest.owo.util;
 
 import net.minecraft.util.ClickType;
 
-public enum MouseButton {
-    LEFT, RIGHT, MIDDLE;
+public final class MouseButton {
+    public static final int LEFT = 0;
+    public static final int RIGHT = 1;
+    public static final int MIDDLE = 2;
 
-    public ClickType toClickType() {
-        return switch (this) {
-            case LEFT -> ClickType.LEFT;
-            case RIGHT -> ClickType.RIGHT;
-            case MIDDLE -> null;
-        };
+    private MouseButton() {
+
     }
 
-    public static MouseButton fromInt(int raw) {
-        return switch (raw) {
-            case 0 -> LEFT;
-            case 1 -> RIGHT;
-            case 2 -> MIDDLE;
+    public static ClickType toClickType(int id) {
+        return switch (id) {
+            case LEFT -> ClickType.LEFT;
+            case RIGHT -> ClickType.RIGHT;
             default -> null;
         };
     }

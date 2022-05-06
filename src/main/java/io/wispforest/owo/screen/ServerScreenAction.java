@@ -1,6 +1,8 @@
 package io.wispforest.owo.screen;
 
+import io.wispforest.owo.network.NetworkException;
 import io.wispforest.owo.network.serialization.PacketBufSerializer;
+import io.wispforest.owo.network.serialization.RecordSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -10,23 +12,29 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.function.Consumer;
 
-public class ServerScreenAction<T> {
+class ServerScreenAction<R extends Record> {
     private final int actionId;
     private final EnvType targetEnv;
-    private final PacketBufSerializer<T> serializer;
-    private final Consumer<T> executor;
-    private final ServerScreen<?> screen;
+    private final RecordSerializer<R> serializer;
+    private final Class<R> dataClass;
+    Consumer<R> executor;
+    private final ServerScreen<?, ?> screen;
 
-    ServerScreenAction(int actionId, EnvType targetEnv, Class<T> klass, Consumer<T> executor, ServerScreen<?> screen) {
+    ServerScreenAction(int actionId, EnvType targetEnv, Class<R> klass, Consumer<R> executor, ServerScreen<?, ?> screen) {
         this.actionId = actionId;
         this.targetEnv = targetEnv;
-        this.serializer = PacketBufSerializer.get(klass);
+        this.serializer = RecordSerializer.create(klass);
+        dataClass = klass;
         this.executor = executor;
         this.screen = screen;
     }
 
-    public void run(T data) {
+    void run(R data) {
         var screenEnv = screen.player.world.isClient ? EnvType.CLIENT : EnvType.SERVER;
+
+        if (executor == null) {
+            throw new NetworkException("Executor wasn't registered for " + dataClass);
+        }
 
         if (screenEnv == targetEnv) {
             executor.accept(data);
@@ -34,7 +42,7 @@ public class ServerScreenAction<T> {
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeVarInt(screen.screenId);
             buf.writeVarInt(actionId);
-            serializer.serializer().accept(buf, data);
+            serializer.write(buf, data);
 
             if (screenEnv == EnvType.CLIENT) {
                 ClientPlayNetworking.send(ServerScreenInternals.RUN_ACTION_ID, buf);
@@ -45,7 +53,7 @@ public class ServerScreenAction<T> {
     }
 
     void readAndRun(PacketByteBuf buf) {
-        T data = serializer.deserializer().apply(buf);
+        R data = serializer.read(buf);
         executor.accept(data);
     }
 }

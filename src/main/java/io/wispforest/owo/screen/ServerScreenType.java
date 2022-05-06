@@ -1,26 +1,33 @@
 package io.wispforest.owo.screen;
 
+import io.wispforest.owo.client.screens.ClientServerScreen;
+import io.wispforest.owo.network.NetworkException;
 import io.wispforest.owo.network.serialization.PacketBufSerializer;
 import io.wispforest.owo.util.OwoFreezer;
 import io.wispforest.owo.util.ReflectionUtils;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
-public class ServerScreenType<T> {
+public class ServerScreenType<T extends ServerScreen<T, D>, D> {
 
-    private static final Map<Identifier, ServerScreenType<?>> REGISTERED_TYPES = new HashMap<>();
+    static final Map<Identifier, ServerScreenType<?, ?>> REGISTERED_TYPES = new HashMap<>();
     private final Identifier id;
-    private final PacketBufSerializer<T> dataSerializer;
+    private final PacketBufSerializer<D> dataSerializer;
     private final String ownerClassName;
-    private final Factory<T> factory;
+    private final Factory<T, D> factory;
+    Function<T, ClientServerScreen<T>> screenFactory;
 
-    private ServerScreenType(Identifier id, Class<T> dataType, String ownerClassName, Factory<T> factory) {
+    private ServerScreenType(Identifier id, Class<D> dataType, String ownerClassName, Factory<T, D> factory) {
         this.factory = factory;
         OwoFreezer.checkRegister("Server screens");
 
@@ -35,11 +42,19 @@ public class ServerScreenType<T> {
         this.ownerClassName = ownerClassName;
     }
 
-    public static <T> ServerScreenType<T> create(Identifier id, Class<T> dataClass, Factory<T> factory) {
+    public static <T extends ServerScreen<T, D>, D> ServerScreenType<T, D> create(Identifier id, Class<D> dataClass, Factory<T, D> factory) {
         return new ServerScreenType<>(id, dataClass, ReflectionUtils.getCallingClassName(2), factory);
     }
 
-    Packet<?> createOpenPacket(T data, int screenId) {
+    public ServerScreenType<T, D> setScreenFactory(Function<T, ClientServerScreen<T>> factory) {
+        OwoFreezer.checkRegister("Screen factories");
+        if (this.screenFactory != null) throw new NetworkException("Server screen type already has a screen factory");
+
+        screenFactory = factory;
+        return this;
+    }
+
+    Packet<?> createOpenPacket(D data, int screenId) {
         PacketByteBuf buf = PacketByteBufs.create();
 
         buf.writeIdentifier(id);
@@ -53,23 +68,14 @@ public class ServerScreenType<T> {
         return id;
     }
 
-    private interface Factory<T> {
-        ServerScreen<T> createServerScreen(int screenId, T data);
+    public interface Factory<S extends ServerScreen<S, T>, T> {
+        S createServerScreen(int screenId, PlayerEntity player, T data);
     }
 
-    ServerScreen<T> readScreen(PacketByteBuf buf) {
+    T readScreen(PlayerEntity player, PacketByteBuf buf) {
         int screenId = buf.readVarInt();
-        T data = dataSerializer.deserializer().apply(buf);
+        D data = dataSerializer.deserializer().apply(buf);
 
-        return factory.createServerScreen(screenId, data);
-    }
-
-    static {
-        ServerPlayNetworking.registerGlobalReceiver(ServerScreenInternals.OPEN_SCREEN_ID, (server, player, handler, buf, responseSender) -> {
-            Identifier id = buf.readIdentifier();
-            ServerScreenType<?> screenType = REGISTERED_TYPES.get(id);
-            ServerScreen<?> screen = screenType.readScreen(buf);
-            screen.openFor(player);
-        });
+        return factory.createServerScreen(screenId, player, data);
     }
 }
