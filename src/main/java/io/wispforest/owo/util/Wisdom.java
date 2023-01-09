@@ -3,13 +3,13 @@ package io.wispforest.owo.util;
 import com.google.common.collect.ImmutableList;
 import io.wispforest.owo.Owo;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.random.Random;
 
 import java.util.List;
+import java.util.Random;
 
 public class Wisdom {
 
-    private static final Random CRYSTAL_BALL = Random.create();
+    private static final Random CRYSTAL_BALL = new Random();
     public static final List<String> ALL_THE_WISDOM = ImmutableList.of(
             "assume less - mald more",
             ":ctft: 117896 and counting",

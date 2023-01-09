@@ -5,7 +5,7 @@ import io.wispforest.owo.itemgroup.OwoItemGroup;
 import io.wispforest.owo.itemgroup.OwoItemSettings;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 
@@ -28,7 +28,7 @@ public record ItemGroupTab(
 
     @Override
     public String getTranslationKey(String groupKey) {
-        return this.name.getContent() instanceof TranslatableTextContent translatable
+        return this.name instanceof TranslatableText translatable
                 ? translatable.getKey()
                 : this.name.getString();
     }

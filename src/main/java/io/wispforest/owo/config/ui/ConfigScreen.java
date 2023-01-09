@@ -25,8 +25,10 @@ import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -142,7 +144,7 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
     protected void build(FlowLayout rootComponent) {
         this.options.clear();
 
-        rootComponent.childById(LabelComponent.class, "title").text(Text.translatable("text.config." + this.config.name() + ".title"));
+        rootComponent.childById(LabelComponent.class, "title").text(new TranslatableText("text.config." + this.config.name() + ".title"));
         if (this.client.world == null) {
             rootComponent.surface(Surface.OPTIONS_BACKGROUND);
         }
@@ -151,7 +153,8 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
         rootComponent.childById(ButtonComponent.class, "reload-button").onPress(button -> {
             this.config.load();
             this.uiAdapter = null;
-            this.clearAndInit();
+            this.clearChildren();
+            this.init();
 
             // TODO check if any options changed and warn
         });
@@ -172,7 +175,7 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                 searchField.setSuggestion(s.isEmpty() ? searchHint : "");
                 if (!s.equals(this.lastSearchFieldText)) {
                     searchField.setEditableColor(TextFieldWidget.DEFAULT_EDITABLE_COLOR);
-                    matchIndicator.text(Text.empty());
+                    matchIndicator.text(new LiteralText(""));
                 }
             });
 
@@ -195,10 +198,10 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                 }
 
                 if (this.currentMatches == null || this.currentMatches.matches.isEmpty()) {
-                    matchIndicator.text(Text.translatable("text.owo.config.search.no_matches"));
+                    matchIndicator.text(new TranslatableText("text.owo.config.search.no_matches"));
                     searchField.setEditableColor(0xEB1D36);
                 } else {
-                    matchIndicator.text(Text.translatable("text.owo.config.search.matches", this.currentMatchIndex + 1, this.currentMatches.matches.size()));
+                    matchIndicator.text(new TranslatableText("text.owo.config.search.matches", this.currentMatchIndex + 1, this.currentMatches.matches.size()));
                     searchField.setEditableColor(0x28FFBF);
 
                     var selectedMatch = this.currentMatches.matches.get(this.currentMatchIndex);
@@ -255,12 +258,12 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                     parentKey,
                     Containers.collapsible(
                             Sizing.fill(100), Sizing.content(),
-                            Text.translatable("text.config." + this.config.name() + ".category." + parentKey.asString()),
+                            new TranslatableText("text.config." + this.config.name() + ".category." + parentKey.asString()),
                             expanded
                     ).<CollapsibleContainer>configure(nestedContainer -> {
                         final var categoryKey = "text.config." + this.config.name() + ".category." + parentKey.asString();
                         if (I18n.hasTranslation(categoryKey + ".tooltip")) {
-                            nestedContainer.titleLayout().tooltip(Text.translatable(categoryKey + ".tooltip"));
+                            nestedContainer.titleLayout().tooltip(new TranslatableText(categoryKey + ".tooltip"));
                         }
 
                         nestedContainer.titleLayout().child(new SearchAnchorComponent(
@@ -285,7 +288,7 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
 
             if (option.detached()) {
                 result.baseComponent().tooltip(
-                        this.client.textRenderer.wrapLines(Text.translatable("text.owo.config.managed_by_server"), Integer.MAX_VALUE)
+                        this.client.textRenderer.wrapLines(new TranslatableText("text.owo.config.managed_by_server"), Integer.MAX_VALUE)
                                 .stream().map(TooltipComponent::of).toList()
                 );
             } else {
@@ -293,11 +296,11 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                 var tooltipTranslationKey = option.translationKey() + ".tooltip";
 
                 if (I18n.hasTranslation(tooltipTranslationKey)) {
-                    tooltipText.addAll(this.client.textRenderer.wrapLines(Text.translatable(tooltipTranslationKey), Integer.MAX_VALUE));
+                    tooltipText.addAll(this.client.textRenderer.wrapLines(new TranslatableText(tooltipTranslationKey), Integer.MAX_VALUE));
                 }
 
                 if (option.backingField().hasAnnotation(RestartRequired.class)) {
-                    tooltipText.add(Text.translatable("text.owo.config.applies_after_restart").asOrderedText());
+                    tooltipText.add(new TranslatableText("text.owo.config.applies_after_restart").asOrderedText());
                 }
 
                 if (!tooltipText.isEmpty()) {
@@ -341,7 +344,7 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                 buttonPanel.child(label);
             });
 
-            var closeButton = Components.label(Text.literal("<").formatted(Formatting.BOLD));
+            var closeButton = Components.label(new LiteralText("<").formatted(Formatting.BOLD));
             closeButton.positioning(Positioning.relative(100, 50)).cursorStyle(CursorStyle.HAND).margins(Insets.right(2));
 
             panelContainer.child(closeButton);
@@ -358,7 +361,7 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
                 buttonPanel.horizontalSizing().animation().reverse();
                 panelContainer.horizontalSizing().animation().reverse();
 
-                closeButton.text(Text.literal(closeButton.text().getString().equals(">") ? "<" : ">").formatted(Formatting.BOLD));
+                closeButton.text(new LiteralText(closeButton.text().getString().equals(">") ? "<" : ">").formatted(Formatting.BOLD));
 
                 UISounds.playInteractionSound();
                 return true;
@@ -374,11 +377,11 @@ public class ConfigScreen extends BaseUIModelScreen<FlowLayout> {
 
         final var header = this.model.expandTemplate(FlowLayout.class, "section-header", Map.of());
         header.childById(LabelComponent.class, "header").<LabelComponent>configure(label -> {
-            label.text(Text.translatable(translationKey).formatted(Formatting.YELLOW, Formatting.BOLD));
+            label.text(new TranslatableText(translationKey).formatted(Formatting.YELLOW, Formatting.BOLD));
             header.child(new SearchAnchorComponent(header, Option.Key.ROOT, () -> label.text().getString()));
         });
 
-        sections.put(header, Text.translatable(translationKey));
+        sections.put(header, new TranslatableText(translationKey));
 
         container.child(header);
     }

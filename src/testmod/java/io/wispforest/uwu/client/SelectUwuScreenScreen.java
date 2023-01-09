@@ -8,7 +8,7 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.VerticalFlowLayout;
 import io.wispforest.owo.ui.core.*;
 import io.wispforest.uwu.Uwu;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.jetbrains.annotations.NotNull;
 
 public class SelectUwuScreenScreen extends BaseOwoScreen<VerticalFlowLayout> {
@@ -25,7 +25,7 @@ public class SelectUwuScreenScreen extends BaseOwoScreen<VerticalFlowLayout> {
                 .horizontalAlignment(HorizontalAlignment.CENTER);
 
         this.uiAdapter.rootComponent.child(
-                Components.label(Text.literal("Available screens"))
+                Components.label(new LiteralText("Available screens"))
                         .shadow(true)
                         .margins(Insets.bottom(5))
         );
@@ -36,11 +36,11 @@ public class SelectUwuScreenScreen extends BaseOwoScreen<VerticalFlowLayout> {
                     .horizontalAlignment(HorizontalAlignment.CENTER);
         });
 
-        panel.child(Components.button(Text.literal("code demo"), button -> this.client.setScreen(new ComponentTestScreen())).margins(Insets.vertical(3)));
-        panel.child(Components.button(Text.literal("xml demo"), button -> this.client.setScreen(new TestParseScreen())).margins(Insets.vertical(3)));
-        panel.child(Components.button(Text.literal("code config"), button -> this.client.setScreen(new TestConfigScreen())).margins(Insets.vertical(3)));
-        panel.child(Components.button(Text.literal("xml config"), button -> this.client.setScreen(ConfigScreen.create(Uwu.CONFIG, null))).margins(Insets.vertical(3)));
-        panel.child(Components.button(Text.literal("optimization test"), button -> this.client.setScreen(new TooManyComponentsScreen())).margins(Insets.vertical(3)));
+        panel.child(Components.button(new LiteralText("code demo"), button -> this.client.setScreen(new ComponentTestScreen())).margins(Insets.vertical(3)));
+        panel.child(Components.button(new LiteralText("xml demo"), button -> this.client.setScreen(new TestParseScreen())).margins(Insets.vertical(3)));
+        panel.child(Components.button(new LiteralText("code config"), button -> this.client.setScreen(new TestConfigScreen())).margins(Insets.vertical(3)));
+        panel.child(Components.button(new LiteralText("xml config"), button -> this.client.setScreen(ConfigScreen.create(Uwu.CONFIG, null))).margins(Insets.vertical(3)));
+        panel.child(Components.button(new LiteralText("optimization test"), button -> this.client.setScreen(new TooManyComponentsScreen())).margins(Insets.vertical(3)));
 
         this.uiAdapter.rootComponent.child(panel);
     }

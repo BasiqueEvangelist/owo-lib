@@ -15,6 +15,7 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -230,7 +231,7 @@ public class Drawer extends DrawableHelper {
                     }
 
                     final var nameText = Text.of(child.getClass().getSimpleName() + (child.id() != null ? " '" + child.id() + "'" : ""));
-                    final var descriptor = Text.literal(child.x() + "," + child.y() + " (" + child.width() + "," + child.height() + ")"
+                    final var descriptor = new LiteralText(child.x() + "," + child.y() + " (" + child.width() + "," + child.height() + ")"
                             + " <" + margins.top() + "," + margins.bottom() + "," + margins.left() + "," + margins.right() + "> ");
                     if (child instanceof ParentComponent parentComponent) {
                         var padding = parentComponent.padding().get();
@@ -257,7 +258,7 @@ public class Drawer extends DrawableHelper {
         private static UtilityScreen INSTANCE;
 
         private UtilityScreen() {
-            super(Text.empty());
+            super(Text.of(""));
         }
 
         @Override

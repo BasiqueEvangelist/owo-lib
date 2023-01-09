@@ -10,6 +10,7 @@ import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
 import io.wispforest.owo.ui.util.CommandOpenedScreen;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public class RenderdocScreen extends BaseOwoScreen<FlowLayout> implements Comman
         var overlayState = RenderDoc.getOverlayOptions();
         rootComponent.child(
                         Containers.verticalFlow(Sizing.content(), Sizing.content())
-                                .child(Components.label(Text.literal("RenderDoc Controls")).shadow(true).margins(Insets.top(5).withBottom(10)))
+                                .child(Components.label(new LiteralText("RenderDoc Controls")).shadow(true).margins(Insets.top(5).withBottom(10)))
                                 .child(
                                         Containers.grid(Sizing.content(), Sizing.content(), 2, 2)
                                                 .child(overlayControl(Text.of("Enabled"), overlayState, RenderDoc.OverlayOption.ENABLED), 0, 0)

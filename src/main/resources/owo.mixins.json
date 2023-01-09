@@ -8,7 +8,7 @@
     "SimpleRegistryMixin", "TagGroupLoaderMixin", "itemgroup.FabricItemGroupBuilderMixin", "itemgroup.ItemMixin", "offline.AdvancementProgressAccessor",
     "offline.PlayerAdvancementTrackerMixin", "offline.WorldSaveHandlerMixin", "recipe_remainders.CraftingResultSlotMixin",
     "recipe_remainders.RecipeManagerMixin", "recipe_remainders.RecipeMixin", "text.LanguageMixin", "text.TextSerializerMixin",
-    "text.TranslatableTextContentMixin", "text.stapi.SystemDelegatedLanguageFixin", "tweaks.EulaReaderMixin", "tweaks.LevelInfoMixin", "ui.BlockEntityAccessor",
+    "text.TranslatableTextMixin", "text.stapi.SystemDelegatedLanguageFixin", "tweaks.EulaReaderMixin", "tweaks.LevelInfoMixin", "ui.BlockEntityAccessor",
     "ui.SlotAccessor", "ui.SlotMixin"
   ],
   "client": [

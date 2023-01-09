@@ -13,37 +13,22 @@ import io.wispforest.owo.particles.systems.ParticleSystem;
 import io.wispforest.owo.particles.systems.ParticleSystemController;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import io.wispforest.owo.text.CustomTextRegistry;
-import io.wispforest.owo.ui.component.Components;
-import io.wispforest.owo.ui.component.EntityComponent;
-import io.wispforest.owo.ui.container.Containers;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Insets;
-import io.wispforest.owo.ui.core.Sizing;
-import io.wispforest.owo.ui.core.VerticalAlignment;
-import io.wispforest.owo.ui.layers.Layer;
-import io.wispforest.owo.ui.layers.Layers;
-import io.wispforest.owo.ui.util.UISounds;
 import io.wispforest.owo.util.RegistryAccess;
 import io.wispforest.owo.util.TagInjector;
 import io.wispforest.uwu.config.BruhConfig;
 import io.wispforest.uwu.config.UwuConfig;
 import io.wispforest.uwu.items.UwuItems;
 import io.wispforest.uwu.network.*;
-import io.wispforest.uwu.text.BasedTextContent;
+import io.wispforest.uwu.text.BasedText;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.command.argument.GameProfileArgumentType;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AllayEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -56,8 +41,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.TagKey;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -119,7 +104,7 @@ public class Uwu implements ModInitializer {
 
     public static final ItemGroup VANILLA_GROUP = FabricItemGroupBuilder.create(new Identifier("uwu", "vanilla_group"))
             .icon(Items.ACACIA_BOAT::getDefaultStack)
-            .appendItems((itemStacks, group) -> itemStacks.add(Items.MANGROVE_CHEST_BOAT.getDefaultStack()))
+            .appendItems((itemStacks, group) -> itemStacks.add(Items.MAGENTA_BANNER.getDefaultStack()))
             .build();
 
     public static final OwoNetChannel CHANNEL = OwoNetChannel.create(new Identifier("uwu", "uwu"));
@@ -178,7 +163,7 @@ public class Uwu implements ModInitializer {
         System.out.println(RegistryAccess.getEntry(Registry.ITEM, Items.ACACIA_BOAT));
         System.out.println(RegistryAccess.getEntry(Registry.ITEM, new Identifier("acacia_planks")));
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, isDedicated) -> {
             dispatcher.register(
                     literal("show_nbt")
                             .then(argument("player", GameProfileArgumentType.gameProfile())
@@ -196,7 +181,7 @@ public class Uwu implements ModInitializer {
                                             .executes(context -> {
                                                 GameProfile profile = GameProfileArgumentType.getProfileArgument(context, "player").iterator().next();
                                                 Map<Identifier, AdvancementProgress> map = OfflineAdvancementLookup.get(profile.getId());
-                                                context.getSource().sendFeedback(Text.literal(map.toString()), false);
+                                                context.getSource().sendFeedback(new LiteralText(map.toString()), false);
                                                 System.out.println(map);
                                                 return 0;
                                             })))
@@ -215,7 +200,7 @@ public class Uwu implements ModInitializer {
 
         });
 
-        CustomTextRegistry.register("based", BasedTextContent.Serializer.INSTANCE);
+        CustomTextRegistry.register("based", BasedText.Serializer.INSTANCE);
 
         UwuNetworkExample.init();
         UwuOptionalNetExample.init();

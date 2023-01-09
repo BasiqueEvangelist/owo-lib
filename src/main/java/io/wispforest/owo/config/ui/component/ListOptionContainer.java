@@ -15,7 +15,8 @@ import io.wispforest.owo.util.NumberReflection;
 import io.wispforest.owo.util.ReflectionUtils;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -36,7 +37,7 @@ public class ListOptionContainer<T> extends CollapsibleContainer implements Opti
     public ListOptionContainer(Option<List<T>> option) {
         super(
                 Sizing.fill(100), Sizing.content(),
-                Text.translatable("text.config." + option.configName() + ".option." + option.key().asString()),
+                new TranslatableText("text.config." + option.configName() + ".option." + option.key().asString()),
                 option.backingField().field().isAnnotationPresent(Expanded.class)
         );
 
@@ -50,7 +51,7 @@ public class ListOptionContainer<T> extends CollapsibleContainer implements Opti
         this.titleLayout.verticalAlignment(VerticalAlignment.CENTER);
 
         if (!option.detached()) {
-            this.titleLayout.child(Components.label(Text.translatable("text.owo.config.list.add_entry").formatted(Formatting.GRAY)).<LabelComponent>configure(label -> {
+            this.titleLayout.child(Components.label(new TranslatableText("text.owo.config.list.add_entry").formatted(Formatting.GRAY)).<LabelComponent>configure(label -> {
                 label.cursorStyle(CursorStyle.HAND);
 
                 label.mouseEnter().subscribe(() -> label.text(label.text().copy().styled(style -> style.withColor(Formatting.YELLOW))));
@@ -73,7 +74,7 @@ public class ListOptionContainer<T> extends CollapsibleContainer implements Opti
             }));
         }
 
-        this.resetButton = Components.button(Text.literal("⇄"), (ButtonComponent button) -> {
+        this.resetButton = Components.button(new LiteralText("⇄"), (ButtonComponent button) -> {
             this.backingList.clear();
             this.backingList.addAll(option.defaultValue());
 

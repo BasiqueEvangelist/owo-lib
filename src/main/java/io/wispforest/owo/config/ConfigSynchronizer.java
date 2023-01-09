@@ -19,8 +19,10 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -140,14 +142,14 @@ public class ConfigSynchronizer {
                             option.key().asString(), option.configName(), option.value(), serverValue);
                 });
 
-                var errorMessage = Text.empty();
+                var errorMessage = new LiteralText("");
                 var optionsByConfig = HashMultimap.<String, Pair<Option<?>, Object>>create();
 
                 mismatchedOptions.forEach((option, serverValue) -> optionsByConfig.put(option.configName(), new Pair<>(option, serverValue)));
                 for (var configName : optionsByConfig.keys()) {
                     errorMessage.append(TextOps.withFormatting("in config ", Formatting.GRAY)).append(configName).append("\n");
                     for (var option : optionsByConfig.get(configName)) {
-                        errorMessage.append(Text.translatable(option.getLeft().translationKey()).formatted(Formatting.YELLOW)).append(" -> ");
+                        errorMessage.append(new TranslatableText(option.getLeft().translationKey()).formatted(Formatting.YELLOW)).append(" -> ");
                         errorMessage.append(option.getLeft().value().toString()).append(TextOps.withFormatting(" (client)", Formatting.GRAY));
                         errorMessage.append(TextOps.withFormatting(" / ", Formatting.DARK_GRAY));
                         errorMessage.append(option.getRight().toString()).append(TextOps.withFormatting(" (server)", Formatting.GRAY)).append("\n");

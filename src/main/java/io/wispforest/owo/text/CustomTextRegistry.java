@@ -7,16 +7,16 @@ import java.util.Map;
 
 public final class CustomTextRegistry {
 
-    private static final Map<String, CustomTextContentSerializer<?>> SERIALIZERS = new HashMap<>();
+    private static final Map<String, CustomTextSerializer<?>> SERIALIZERS = new HashMap<>();
 
     private CustomTextRegistry() {}
 
-    public static void register(String baseKey, CustomTextContentSerializer<?> serializer) {
+    public static void register(String baseKey, CustomTextSerializer<?> serializer) {
         SERIALIZERS.put(baseKey, serializer);
     }
 
     @ApiStatus.Internal
-    public static Map<String, CustomTextContentSerializer<?>> serializerMap() {
+    public static Map<String, CustomTextSerializer<?>> serializerMap() {
         return SERIALIZERS;
     }
 }

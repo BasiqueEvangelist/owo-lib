@@ -5,7 +5,7 @@ import io.wispforest.owo.text.TextLanguage;
 import io.wispforest.owo.text.TranslationContext;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Language;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,23 +19,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Mixin(TranslatableTextContent.class)
-public class TranslatableTextContentMixin {
+@Mixin(TranslatableText.class)
+public class TranslatableTextMixin {
     @Shadow private List<StringVisitable> translations;
 
     @Shadow
     @Final
     private String key;
 
-    @Inject(method = {"visit(Lnet/minecraft/text/StringVisitable$Visitor;)Ljava/util/Optional;", "visit(Lnet/minecraft/text/StringVisitable$StyledVisitor;Lnet/minecraft/text/Style;)Ljava/util/Optional;"}, at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"), cancellable = true)
+    @Inject(method = {"visitSelf(Lnet/minecraft/text/StringVisitable$Visitor;)Ljava/util/Optional;", "visitSelf(Lnet/minecraft/text/StringVisitable$StyledVisitor;Lnet/minecraft/text/Style;)Ljava/util/Optional;"}, at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"), cancellable = true)
     private <T> void enter(CallbackInfoReturnable<Optional<T>> cir) {
-        if (!TranslationContext.pushContent((TranslatableTextContent) (Object) this)) {
+        if (!TranslationContext.pushContent((TranslatableText) (Object) this)) {
             Owo.LOGGER.warn("Detected translation reference cycle, replacing with empty");
             cir.setReturnValue(Optional.empty());
         }
     }
 
-    @Inject(method = {"visit(Lnet/minecraft/text/StringVisitable$Visitor;)Ljava/util/Optional;", "visit(Lnet/minecraft/text/StringVisitable$StyledVisitor;Lnet/minecraft/text/Style;)Ljava/util/Optional;"}, at = @At(value = "RETURN"))
+    @Inject(method = {"visitSelf(Lnet/minecraft/text/StringVisitable$Visitor;)Ljava/util/Optional;", "visitSelf(Lnet/minecraft/text/StringVisitable$StyledVisitor;Lnet/minecraft/text/Style;)Ljava/util/Optional;"}, at = @At(value = "RETURN"))
     private <T> void exit(CallbackInfoReturnable<Optional<T>> cir) {
         TranslationContext.popContent();
     }

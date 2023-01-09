@@ -11,7 +11,9 @@ import io.wispforest.owo.ui.parsing.UIParsing;
 import io.wispforest.owo.ui.util.Drawer;
 import io.wispforest.owo.ui.util.UISounds;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.w3c.dom.Element;
@@ -135,8 +137,8 @@ public class DropdownComponent extends HorizontalFlowLayout {
                 }
                 case "nested" -> {
                     var text = entry.getAttribute("translate").equals("true")
-                            ? Text.translatable(entry.getAttribute("name"))
-                            : Text.literal(entry.getAttribute("name"));
+                            ? new TranslatableText(entry.getAttribute("name"))
+                            : new LiteralText(entry.getAttribute("name"));
                     this.nested(text, Sizing.content(), dropdownComponent -> dropdownComponent.parseAndApplyEntries(entry));
                 }
             }

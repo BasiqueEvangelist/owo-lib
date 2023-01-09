@@ -13,6 +13,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
@@ -90,7 +91,7 @@ public class DumpdataCommand {
                 5 * 5);
 
         if (target == null || target.getType() != HitResult.Type.ENTITY) {
-            source.sendError(TextOps.concat(Owo.PREFIX, Text.literal("You're not looking at an entity")));
+            source.sendError(TextOps.concat(Owo.PREFIX, new LiteralText("You're not looking at an entity")));
             return 1;
         }
 
@@ -114,7 +115,7 @@ public class DumpdataCommand {
         final var target = player.raycast(5, 0, false);
 
         if (target.getType() != HitResult.Type.BLOCK) {
-            source.sendError(TextOps.concat(Owo.PREFIX, Text.literal("You're not looking at a block")));
+            source.sendError(TextOps.concat(Owo.PREFIX, new LiteralText("You're not looking at a block")));
             return 1;
         }
 

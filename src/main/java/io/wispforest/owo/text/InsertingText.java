@@ -3,20 +3,26 @@ package io.wispforest.owo.text;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import net.minecraft.text.StringVisitable;
+import net.minecraft.text.BaseText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.JsonHelper;
 
 import java.util.Optional;
 
-public record InsertingTextContent(int index) implements CustomTextContent {
+public final class InsertingText extends BaseText implements CustomText {
+    private final int index;
+
+    public InsertingText(int index) {
+        this.index = index;
+    }
+
     public static void init() {
         CustomTextRegistry.register("index", Serializer.INSTANCE);
     }
 
     @Override
-    public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+    public <T> Optional<T> visitSelf(Visitor<T> visitor) {
         var current = TranslationContext.getCurrent();
 
         if (current == null || current.getArgs().length <= index)
@@ -32,7 +38,7 @@ public record InsertingTextContent(int index) implements CustomTextContent {
     }
 
     @Override
-    public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
+    public <T> Optional<T> visitSelf(StyledVisitor<T> visitor, Style style) {
         var current = TranslationContext.getCurrent();
 
         if (current == null || current.getArgs().length <= index)
@@ -48,20 +54,35 @@ public record InsertingTextContent(int index) implements CustomTextContent {
     }
 
     @Override
-    public CustomTextContentSerializer<?> serializer() {
+    public CustomTextSerializer<?> serializer() {
         return Serializer.INSTANCE;
     }
 
-    private enum Serializer implements CustomTextContentSerializer<InsertingTextContent> {
+    public int index() {
+        return index;
+    }
+
+    @Override
+    public BaseText copy() {
+        return new InsertingText(index);
+    }
+
+    @Override
+    public String toString() {
+        return "InsertingText[" +
+                "index=" + index + ']';
+    }
+
+    private enum Serializer implements CustomTextSerializer<InsertingText> {
         INSTANCE;
 
         @Override
-        public InsertingTextContent deserialize(JsonObject obj, JsonDeserializationContext ctx) {
-            return new InsertingTextContent(JsonHelper.getInt(obj, "index"));
+        public InsertingText deserialize(JsonObject obj, JsonDeserializationContext ctx) {
+            return new InsertingText(JsonHelper.getInt(obj, "index"));
         }
 
         @Override
-        public void serialize(InsertingTextContent content, JsonObject obj, JsonSerializationContext ctx) {
+        public void serialize(InsertingText content, JsonObject obj, JsonSerializationContext ctx) {
             obj.addProperty("index", content.index);
         }
     }

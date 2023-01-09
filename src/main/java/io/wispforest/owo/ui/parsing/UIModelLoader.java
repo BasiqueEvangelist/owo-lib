@@ -29,14 +29,15 @@ public class UIModelLoader implements SynchronousResourceReloader, IdentifiableR
     public void reload(ResourceManager manager) {
         LOADED_MODELS.clear();
 
-        manager.findResources("owo_ui", identifier -> identifier.getPath().endsWith(".xml")).forEach((resourceId, resource) -> {
+        manager.findResources("owo_ui", path -> path.endsWith(".xml")).forEach((resourceId) -> {
             try {
                 var modelId = new Identifier(
                         resourceId.getNamespace(),
                         resourceId.getPath().substring(7, resourceId.getPath().length() - 4)
                 );
+                var res = manager.getResource(resourceId);
 
-                LOADED_MODELS.put(modelId, UIModel.load(resource.getInputStream()));
+                LOADED_MODELS.put(modelId, UIModel.load(res.getInputStream()));
             } catch (ParserConfigurationException | IOException | SAXException e) {
                 Owo.LOGGER.error("Could not parse UI model {}", resourceId, e);
             }

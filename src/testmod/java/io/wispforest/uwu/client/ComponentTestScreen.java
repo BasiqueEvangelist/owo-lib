@@ -7,18 +7,13 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.core.*;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.EditBoxWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -36,7 +31,7 @@ public class ComponentTestScreen extends Screen {
     private OwoUIAdapter<FlowLayout> uiAdapter = null;
 
     public ComponentTestScreen() {
-        super(Text.empty());
+        super(new LiteralText(""));
     }
 
     @Override
@@ -49,7 +44,7 @@ public class ComponentTestScreen extends Screen {
                         .child(Components.button(Text.of("Dark Background"), button -> rootComponent.surface(Surface.flat(0x77000000))).horizontalSizing(Sizing.fixed(95)))
                         .child(Components.button(Text.of("No Background"), button -> rootComponent.surface(Surface.BLANK)).margins(Insets.vertical(5)).horizontalSizing(Sizing.fixed(95)))
                         .child(Components.button(Text.of("Dirt Background"), button -> rootComponent.surface(Surface.OPTIONS_BACKGROUND)).horizontalSizing(Sizing.fixed(95)))
-                        .child(Components.checkbox(Text.of("bruh")).onChanged(aBoolean -> this.client.player.sendMessage(Text.of("bruh: " + aBoolean))).margins(Insets.top(5)))
+                        .child(Components.checkbox(Text.of("bruh")).onChanged(aBoolean -> this.client.player.sendMessage(Text.of("bruh: " + aBoolean), false)).margins(Insets.top(5)))
                         .padding(Insets.of(10))
                         .surface(Surface.flat(0x77000000))
                         .positioning(Positioning.relative(1, 1))
@@ -93,13 +88,14 @@ public class ComponentTestScreen extends Screen {
                 .verticalAlignment(VerticalAlignment.CENTER)
                 .padding(Insets.of(5));
 
-        final var editBox = new EditBoxWidget(MinecraftClient.getInstance().textRenderer,
-                0, 0, 75, 75, Text.literal("bruh"), Text.literal("b r u h")
-        );
-        editBox.sizing(Sizing.fixed(75));
-        editBox.setText("bruh");
-
-        innerLayout.child(editBox);
+        // TODO: edit :b:ox
+//        final var editBox = new EditBoxWidget(MinecraftClient.getInstance().textRenderer,
+//                0, 0, 75, 75, Text.literal("bruh"), Text.literal("b r u h")
+//        );
+//        editBox.sizing(Sizing.fixed(75));
+//        editBox.setText("bruh");
+//
+//        innerLayout.child(editBox);
 
         rootComponent.child(Containers.horizontalScroll(Sizing.fill(20), Sizing.content(), innerLayout)
                 .scrollbarThiccness(6)
@@ -109,10 +105,10 @@ public class ComponentTestScreen extends Screen {
         );
 
         rootComponent.child(Containers.verticalFlow(Sizing.content(), Sizing.content())
-                .child(Components.label(Text.literal("A vertical Flow Layout, as well as a really long text to demonstrate wrapping")
+                .child(Components.label(new LiteralText("A vertical Flow Layout, as well as a really long text to demonstrate wrapping")
                                 .styled(style -> {
                                     return style.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, "yes"))
-                                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(Items.SCULK_SHRIEKER.getDefaultStack())));
+                                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(Items.SALMON /*SCULK_SHRIEKER*/.getDefaultStack())));
                                 }))
                         .shadow(true)
                         .maxWidth(100)
@@ -121,7 +117,7 @@ public class ComponentTestScreen extends Screen {
 
         final var buttonPanel = Containers.horizontalFlow(Sizing.content(), Sizing.content())
                 .child(Components.label(Text.of("A horizontal Flow Layout\nwith a dark panel")).margins(Insets.of(5)))
-                .child(Components.button(Text.of("⇄"), button -> this.clearAndInit()).sizing(Sizing.fixed(20)))
+                .child(Components.button(Text.of("⇄"), button -> {this.clearChildren(); this.init();}).sizing(Sizing.fixed(20)))
                 .child(Components.button(Text.of("X"), button -> this.close()).sizing(Sizing.fixed(20)))
                 .positioning(Positioning.relative(100, 0))
                 .verticalAlignment(VerticalAlignment.CENTER)
@@ -151,8 +147,8 @@ public class ComponentTestScreen extends Screen {
                 .child(Components.discreteSlider(Sizing.fill(10), 0, 5).<DiscreteSliderComponent>configure(
                         slider -> slider.snap(true)
                                 .decimalPlaces(1)
-                                .message(value -> Text.translatable("text.ui.test_slider", value))
-                                .onChanged().subscribe(value -> this.client.player.sendMessage(Text.of("sliding towards " + value)))
+                                .message(value -> new TranslatableText("text.ui.test_slider", value))
+                                .onChanged().subscribe(value -> this.client.player.sendMessage(Text.of("sliding towards " + value), false))
                 ))
                 .gap(10)
                 .padding(Insets.both(5, 10))
@@ -229,7 +225,7 @@ public class ComponentTestScreen extends Screen {
                                 Components.list(
                                         data,
                                         flowLayout -> flowLayout.margins(Insets.bottom(10)),
-                                        integer -> Components.button(Text.literal(integer.toString()), (ButtonComponent button) -> {}).margins(Insets.horizontal(3)).horizontalSizing(Sizing.fixed(20)),
+                                        integer -> Components.button(new LiteralText(integer.toString()), (ButtonComponent button) -> {}).margins(Insets.horizontal(3)).horizontalSizing(Sizing.fixed(20)),
                                         false
                                 )
                         )

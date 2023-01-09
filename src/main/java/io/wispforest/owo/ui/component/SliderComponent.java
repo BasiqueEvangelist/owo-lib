@@ -6,7 +6,9 @@ import io.wispforest.owo.ui.parsing.UIParsing;
 import io.wispforest.owo.util.EventSource;
 import io.wispforest.owo.util.EventStream;
 import net.minecraft.client.gui.widget.SliderWidget;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.MathHelper;
 import org.w3c.dom.Element;
 
@@ -19,11 +21,11 @@ public class SliderComponent extends SliderWidget {
     protected final EventStream<OnChanged> changedEvents = OnChanged.newStream();
     protected final EventStream<OnSlideEnd> slideEndEvents = OnSlideEnd.newStream();
 
-    protected Function<String, Text> messageProvider = value -> Text.empty();
+    protected Function<String, Text> messageProvider = value -> new LiteralText("");
     protected double scrollStep = .05;
 
     protected SliderComponent(Sizing horizontalSizing) {
-        super(0, 0, 0, 0, Text.empty(), 0);
+        super(0, 0, 0, 0, new LiteralText(""), 0);
 
         this.sizing(horizontalSizing, Sizing.fixed(20));
     }
@@ -132,9 +134,9 @@ public class SliderComponent extends SliderWidget {
             var content = node.getTextContent().strip();
 
             if (node.getAttribute("translate").equalsIgnoreCase("true")) {
-                this.message(value -> Text.translatable(content, value));
+                this.message(value -> new TranslatableText(content, value));
             } else {
-                var text = Text.literal(content);
+                var text = new LiteralText(content);
                 this.message(value -> text);
             }
         }

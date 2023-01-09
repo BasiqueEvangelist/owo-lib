@@ -14,6 +14,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -119,7 +120,7 @@ public abstract class CreativeInventoryScreenMixin extends AbstractInventoryScre
         if (owoGroup.getSelectedTab().primary()) {
             return owoGroup.getSelectedTab().name();
         } else {
-            return Text.translatable(
+            return new TranslatableText(
                     "text.owo.itemGroup.tab_template",
                     owoGroup.getDisplayName(),
                     owoGroup.getSelectedTab().name()
@@ -215,7 +216,8 @@ public abstract class CreativeInventoryScreenMixin extends AbstractInventoryScre
     private ButtonWidget.PressAction owo$createSelectAction(Screen targetScreen, OwoItemGroup group, int targetTabIndex) {
         return button -> {
             group.setSelectedTab(targetTabIndex);
-            this.clearAndInit();
+            this.clearChildren();
+            this.init();
             ((ItemGroupButtonWidget) button).isSelected = true;
         };
     }

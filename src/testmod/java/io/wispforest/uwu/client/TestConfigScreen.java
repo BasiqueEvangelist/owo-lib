@@ -8,7 +8,7 @@ import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.VerticalFlowLayout;
 import io.wispforest.owo.ui.core.*;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.IntStream;
@@ -31,7 +31,7 @@ public class TestConfigScreen extends BaseOwoScreen<VerticalFlowLayout> {
                 .toList();
 
         rootComponent.child(Components.label(
-                Text.literal("very epic ").append(Owo.PREFIX).append("config")
+                new LiteralText("very epic ").append(Owo.PREFIX).append("config")
         ).shadow(true).margins(Insets.bottom(15)));
 
         final var optionsScrollContainer = Containers.verticalScroll(
@@ -56,19 +56,19 @@ public class TestConfigScreen extends BaseOwoScreen<VerticalFlowLayout> {
         var container = Containers.horizontalFlow(Sizing.fill(100), Sizing.fixed(32));
         container.padding(Insets.of(5));
 
-        container.child(Components.label(Text.literal(option.name)).positioning(Positioning.relative(0, 50)));
+        container.child(Components.label(new LiteralText(option.name)).positioning(Positioning.relative(0, 50)));
 
         {
             var valueLayout = Containers.horizontalFlow(Sizing.content(), Sizing.fill(100));
             valueLayout.positioning(Positioning.relative(100, 50)).verticalAlignment(VerticalAlignment.CENTER);
             container.child(valueLayout);
 
-            valueLayout.child(Components.slider(Sizing.fixed(200)).message(s -> Text.literal("slider for " + option.name)));
+            valueLayout.child(Components.slider(Sizing.fixed(200)).message(s -> new LiteralText("slider for " + option.name)));
 
             final var valueBox = Components.textBox(Sizing.fixed(80), option.value);
             valueLayout.child(valueBox.margins(Insets.horizontal(5)));
 
-            valueLayout.child(Components.button(Text.literal("⇄"), (ButtonComponent button) -> {
+            valueLayout.child(Components.button(new LiteralText("⇄"), (ButtonComponent button) -> {
                 valueBox.setText(option.value);
             }).margins(Insets.right(5)));
         }

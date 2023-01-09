@@ -9,6 +9,7 @@ import io.wispforest.owo.ui.util.UISounds;
 import io.wispforest.owo.util.EventSource;
 import io.wispforest.owo.util.EventStream;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3f;
@@ -165,7 +166,7 @@ public class CollapsibleContainer extends VerticalFlowLayout {
 
     public static CollapsibleContainer parse(Element element) {
         var textElement = UIParsing.childElements(element).get("text");
-        var title = textElement == null ? Text.empty() : UIParsing.parseText(textElement);
+        var title = textElement == null ? new LiteralText("") : UIParsing.parseText(textElement);
 
         return element.getAttribute("expanded").equals("true")
                 ? Containers.collapsible(Sizing.content(), Sizing.content(), title, true)
@@ -190,7 +191,7 @@ public class CollapsibleContainer extends VerticalFlowLayout {
         protected float targetRotation = 90;
 
         public SpinnyBoiComponent() {
-            super(Text.literal(">"));
+            super(new LiteralText(">"));
             this.margins(Insets.of(0, 0, 5, 10));
             this.cursorStyle(CursorStyle.HAND);
         }

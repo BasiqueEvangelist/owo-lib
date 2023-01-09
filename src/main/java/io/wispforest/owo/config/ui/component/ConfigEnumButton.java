@@ -5,7 +5,8 @@ import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.core.Sizing;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +24,7 @@ public class ConfigEnumButton extends ButtonComponent implements OptionComponent
     protected boolean wasRightClicked = false;
 
     public ConfigEnumButton() {
-        super(Text.empty(), button -> {});
+        super(new LiteralText(""), button -> {});
         this.verticalSizing(Sizing.fixed(20));
         this.updateMessage();
     }
@@ -63,8 +64,8 @@ public class ConfigEnumButton extends ButtonComponent implements OptionComponent
         var optionValueKey = this.backingOption.translationKey() + ".value." + valueName;
 
         this.setMessage(I18n.hasTranslation(optionValueKey)
-                ? Text.translatable(optionValueKey)
-                : Text.translatable("text.config." + this.backingOption.configName() + ".enum." + enumName + "." + valueName)
+                ? new TranslatableText(optionValueKey)
+                : new TranslatableText("text.config." + this.backingOption.configName() + ".enum." + enumName + "." + valueName)
         );
     }
 

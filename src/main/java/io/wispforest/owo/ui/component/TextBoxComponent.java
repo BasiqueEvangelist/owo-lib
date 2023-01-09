@@ -11,7 +11,7 @@ import io.wispforest.owo.util.Observable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.w3c.dom.Element;
 
 import java.util.Map;
@@ -25,7 +25,7 @@ public class TextBoxComponent extends TextFieldWidget {
     protected final EventStream<OnChanged> changedEvents = OnChanged.newStream();
 
     protected TextBoxComponent(Sizing horizontalSizing) {
-        super(MinecraftClient.getInstance().textRenderer, 0, 0, 0, 0, Text.empty());
+        super(MinecraftClient.getInstance().textRenderer, 0, 0, 0, 0, new LiteralText(""));
 
         this.textValue.observe(this.changedEvents.sink()::onChanged);
         this.sizing(horizontalSizing, Sizing.content());

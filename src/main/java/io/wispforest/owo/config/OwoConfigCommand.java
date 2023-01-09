@@ -11,12 +11,11 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.wispforest.owo.Owo;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.ops.TextOps;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 @ApiStatus.Internal
 public class OwoConfigCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess access) {
+    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(ClientCommandManager.literal("owo-config")
                 .then(ClientCommandManager.argument("config_id", new ConfigScreenArgumentType())
                         .executes(context -> {
@@ -38,7 +37,7 @@ public class OwoConfigCommand {
     private static class ConfigScreenArgumentType implements ArgumentType<ConfigScreen> {
 
         private static final SimpleCommandExceptionType NO_SUCH_CONFIG_SCREEN = new SimpleCommandExceptionType(
-                TextOps.concat(Owo.PREFIX, Text.literal("no config screen with that id"))
+                TextOps.concat(Owo.PREFIX, new LiteralText("no config screen with that id"))
         );
 
         @Override

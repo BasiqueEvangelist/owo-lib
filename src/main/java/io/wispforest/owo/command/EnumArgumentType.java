@@ -7,11 +7,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.minecraft.command.CommandSource;
+import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.text.LiteralText;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -34,7 +33,7 @@ public class EnumArgumentType<T extends Enum<T>> implements ArgumentType<Enum<T>
     private EnumArgumentType(Class<T> enumClass, String noElementMessage) {
         this.enumClass = enumClass;
         this.noElementMessage = noElementMessage;
-        this.noValueException = new DynamicCommandExceptionType(o -> Text.literal(this.noElementMessage.replace("{}", o.toString())));
+        this.noValueException = new DynamicCommandExceptionType(o -> new LiteralText(this.noElementMessage.replace("{}", o.toString())));
     }
 
     /**
@@ -50,7 +49,7 @@ public class EnumArgumentType<T extends Enum<T>> implements ArgumentType<Enum<T>
      */
     public static <T extends Enum<T>> EnumArgumentType<T> create(Class<T> enumClass) {
         final var type = new EnumArgumentType<>(enumClass, "Invalid enum value '{}'");
-        ArgumentTypeRegistry.registerArgumentType(new Identifier("owo", "enum_" + enumClass.getName().toLowerCase(Locale.ROOT)), type.getClass(), ConstantArgumentSerializer.of(() -> type));
+        ArgumentTypes.register("owo:enum_" + enumClass.getName().toLowerCase(Locale.ROOT), (Class<EnumArgumentType<?>>)(Object) EnumArgumentType. class, new ConstantArgumentSerializer<>(() -> type));
         return type;
     }
 
@@ -70,7 +69,7 @@ public class EnumArgumentType<T extends Enum<T>> implements ArgumentType<Enum<T>
      */
     public static <T extends Enum<T>> EnumArgumentType<T> create(Class<T> enumClass, String noElementMessage) {
         final var type = new EnumArgumentType<>(enumClass, noElementMessage);
-        ArgumentTypeRegistry.registerArgumentType(new Identifier("owo", "enum_" + enumClass.getName().toLowerCase(Locale.ROOT)), type.getClass(), ConstantArgumentSerializer.of(() -> type));
+        ArgumentTypes.register("owo:enum_" + enumClass.getName().toLowerCase(Locale.ROOT), (Class<EnumArgumentType<?>>)(Object) EnumArgumentType. class, new ConstantArgumentSerializer<>(() -> type));
         return type;
     }
 

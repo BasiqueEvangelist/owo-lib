@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Rarity;
@@ -34,7 +35,7 @@ public class UwuScreenShardItem extends Item {
             user.openHandledScreen(new NamedScreenHandlerFactory() {
                 @Override
                 public Text getDisplayName() {
-                    return Text.literal("bruh momento");
+                    return new LiteralText("bruh momento");
                 }
 
                 @Override

@@ -5,7 +5,7 @@ import io.wispforest.owo.itemgroup.OwoItemSettings;
 import io.wispforest.owo.nbt.NbtKey;
 import io.wispforest.owo.ops.WorldOps;
 import io.wispforest.uwu.Uwu;
-import io.wispforest.uwu.text.BasedTextContent;
+import io.wispforest.uwu.text.BasedText;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -14,7 +14,7 @@ import net.minecraft.item.ItemUsageContext;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -32,7 +32,7 @@ public class UwuTestStickItem extends Item {
         super(new OwoItemSettings().group(Uwu.SIX_TAB_GROUP).tab(3).maxCount(1)
                 .stackGenerator(OwoItemGroup.DEFAULT_STACK_GENERATOR.andThen((item, stacks) -> {
                     final var stack = new ItemStack(item);
-                    stack.setCustomName(Text.literal("the stick of the test").styled(style -> style.withItalic(false)));
+                    stack.setCustomName(new LiteralText("the stick of the test").styled(style -> style.withItalic(false)));
                     stacks.add(stack);
                 })));
     }
@@ -76,7 +76,7 @@ public class UwuTestStickItem extends Item {
             stickStack.put(TEXT_KEY, Text.of(String.valueOf(context.getWorld().random.nextInt(1000000))));
         }
 
-        stickStack.mutate(TEXT_KEY, text -> MutableText.of(new BasedTextContent("basednite, ")).append(text));
+        stickStack.mutate(TEXT_KEY, text -> new BasedText("basednite, ").append(text));
 
         context.getPlayer().sendMessage(TEXT_KEY.get(stickStack.getNbt()), false);
 

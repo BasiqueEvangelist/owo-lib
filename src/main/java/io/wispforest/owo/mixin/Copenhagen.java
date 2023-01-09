@@ -4,7 +4,6 @@ import io.wispforest.owo.util.Maldenhagen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ChunkSectionCache;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.chunk.ChunkSection;
@@ -16,10 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 // welcome to maldenhagen, it moved
 // it originally lived in things, but it was malding too hard there
@@ -54,7 +50,7 @@ public class Copenhagen {
     // now in here we read all the gleaming ore spots from our cache and actually cause a block update so that the
     // lighting calculations happen. all of this just so that some dumb orr block can glow.
     @Inject(method = "generateVeinPart", at = @At("TAIL"))
-    private void coping(StructureWorldAccess world, net.minecraft.util.math.random.Random random, OreFeatureConfig config, double startX, double endX,
+    private void coping(StructureWorldAccess world, Random random, OreFeatureConfig config, double startX, double endX,
                         double startZ, double endZ, double startY, double endY, int x, int y, int z, int horizontalSize,
                         int verticalSize, CallbackInfoReturnable<Boolean> cir) {
 

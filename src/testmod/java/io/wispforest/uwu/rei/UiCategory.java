@@ -53,7 +53,7 @@ public class UiCategory implements DisplayCategory<Display> {
                 .margins(Insets.vertical(25))
                 .horizontalSizing(Sizing.fixed(60)));
 
-        inner.child(adapter.wrap(Widgets.createSlot(new Point(0, 0)).entry(EntryStacks.of(Items.ECHO_SHARD))));
+        inner.child(adapter.wrap(Widgets.createSlot(new Point(0, 0)).entry(EntryStacks.of(Items.AMETHYST_SHARD))));
 
         root.child(Containers.verticalScroll(Sizing.content(), Sizing.fill(100), inner));
 
@@ -63,7 +63,7 @@ public class UiCategory implements DisplayCategory<Display> {
 
     @Override
     public Renderer getIcon() {
-        return EntryStacks.of(Items.ECHO_SHARD);
+        return EntryStacks.of(Items.AMETHYST_SHARD);
     }
 
     @Override

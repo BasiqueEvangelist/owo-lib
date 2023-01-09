@@ -1,13 +1,12 @@
 package io.wispforest.owo.mixin.text;
 
 import com.google.gson.*;
-import io.wispforest.owo.text.CustomTextContent;
-import io.wispforest.owo.text.CustomTextContentSerializer;
+import io.wispforest.owo.text.CustomText;
+import io.wispforest.owo.text.CustomTextSerializer;
 import io.wispforest.owo.text.CustomTextRegistry;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextContent;
 import net.minecraft.util.JsonHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,9 +33,9 @@ public abstract class TextSerializerMixin {
     private void deserializeCustomText(JsonElement el, Type type, JsonDeserializationContext ctx, CallbackInfoReturnable<MutableText> cir) {
         JsonObject obj = el.getAsJsonObject();
 
-        for (Map.Entry<String, CustomTextContentSerializer<?>> entry : CustomTextRegistry.serializerMap().entrySet()) {
+        for (Map.Entry<String, CustomTextSerializer<?>> entry : CustomTextRegistry.serializerMap().entrySet()) {
             if (obj.has(entry.getKey())) {
-                MutableText text = MutableText.of(entry.getValue().deserialize(obj, ctx));
+                MutableText text = entry.getValue().deserialize(obj, ctx);
 
                 if (el.getAsJsonObject().has("extra")) {
                     JsonArray extra = JsonHelper.getArray(obj, "extra");
@@ -58,11 +57,11 @@ public abstract class TextSerializerMixin {
 
     @SuppressWarnings({"unchecked"})
     @Inject(method = "serialize(Lnet/minecraft/text/Text;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;", at = @At(value = "INVOKE", target = "Ljava/lang/IllegalArgumentException;<init>(Ljava/lang/String;)V"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    private void serializeCustomText(Text text, Type type, JsonSerializationContext ctx, CallbackInfoReturnable<JsonElement> cir, JsonObject jsonObject, TextContent textContent) {
-        if (!(textContent instanceof CustomTextContent custom))
+    private void serializeCustomText(Text text, Type type, JsonSerializationContext jsonSerializationContext, CallbackInfoReturnable<JsonElement> cir, JsonObject jsonObject) {
+        if (!(text instanceof CustomText custom))
             return;
 
-        ((CustomTextContentSerializer<CustomTextContent>) custom.serializer()).serialize(custom, jsonObject, ctx);
+        ((CustomTextSerializer<CustomText>) custom.serializer()).serialize(custom, jsonObject, jsonSerializationContext);
 
         cir.setReturnValue(jsonObject);
     }

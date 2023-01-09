@@ -4,7 +4,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
-public interface CustomTextContentSerializer<T extends CustomTextContent> {
+public interface CustomTextSerializer<T extends CustomText> {
 
     T deserialize(JsonObject obj, JsonDeserializationContext ctx);
 

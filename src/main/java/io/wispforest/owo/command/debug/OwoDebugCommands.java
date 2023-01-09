@@ -13,13 +13,12 @@ import io.wispforest.owo.renderdoc.RenderdocScreen;
 import io.wispforest.owo.ui.hud.HudInspectorScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
+import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -27,9 +26,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -56,9 +55,9 @@ public class OwoDebugCommands {
     public static final int VALUE_BLUE = 0x94DAFF;
 
     public static void register() {
-        ArgumentTypeRegistry.registerArgumentType(new Identifier("owo", "damage_source"), DamageSourceArgumentType.class, ConstantArgumentSerializer.of(DamageSourceArgumentType::damageSource));
+        ArgumentTypes.register("owo:damage_source", DamageSourceArgumentType.class, new ConstantArgumentSerializer<>(DamageSourceArgumentType::damageSource));
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, isDedicated) -> {
 
             dispatcher.register(literal("logger").then(argument("level", LEVEL_ARGUMENT_TYPE).executes(context -> {
                 final var level = LEVEL_ARGUMENT_TYPE.get(context, "level");
@@ -74,7 +73,7 @@ public class OwoDebugCommands {
                         var poiType = Registry.POINT_OF_INTEREST_TYPE.getOrEmpty(IdentifierArgumentType.getIdentifier(context, "poi_type"))
                                 .orElseThrow(NO_POI_TYPE::create);
 
-                        var entries = ((ServerWorld) player.world).getPointOfInterestStorage().getInCircle(type -> type.value() == poiType,
+                        var entries = ((ServerWorld) player.world).getPointOfInterestStorage().getInCircle(type -> type == poiType,
                                 player.getBlockPos(), IntegerArgumentType.getInteger(context, "radius"), PointOfInterestStorage.OccupationStatus.ANY).toList();
 
                         player.sendMessage(TextOps.concat(Owo.PREFIX, TextOps.withColor("Found §" + entries.size() + " §entr" + (entries.size() == 1 ? "y" : "ies"),
@@ -106,7 +105,7 @@ public class OwoDebugCommands {
                 HitResult target = player.raycast(5, 0, false);
 
                 if (target.getType() != HitResult.Type.BLOCK) {
-                    source.sendError(TextOps.concat(Owo.PREFIX, Text.literal("You're not looking at a block")));
+                    source.sendError(TextOps.concat(Owo.PREFIX, new LiteralText("You're not looking at a block")));
                     return 1;
                 }
 
@@ -114,7 +113,7 @@ public class OwoDebugCommands {
                 final var blockEntity = player.getWorld().getBlockEntity(pos);
 
                 if (blockEntity == null) {
-                    source.sendError(TextOps.concat(Owo.PREFIX, Text.literal(("No block entity"))));
+                    source.sendError(TextOps.concat(Owo.PREFIX, new LiteralText(("No block entity"))));
                     return 1;
                 }
 
@@ -129,13 +128,13 @@ public class OwoDebugCommands {
                     source.sendFeedback(TextOps.concat(Owo.PREFIX, TextOps.withColor("Field value: §" + value, TextOps.color(Formatting.GRAY), KEY_BLUE)), false);
 
                 } catch (Exception e) {
-                    source.sendError(TextOps.concat(Owo.PREFIX, Text.literal("Could not access field - " + e.getClass().getSimpleName() + ": " + e.getMessage())));
+                    source.sendError(TextOps.concat(Owo.PREFIX, new LiteralText("Could not access field - " + e.getClass().getSimpleName() + ": " + e.getMessage())));
                 }
 
                 return 0;
             })));
 
-            MakeLootContainerCommand.register(dispatcher, registryAccess);
+            MakeLootContainerCommand.register(dispatcher);
             DumpdataCommand.register(dispatcher);
             DamageCommand.register(dispatcher);
             HealCommand.register(dispatcher);
@@ -149,34 +148,34 @@ public class OwoDebugCommands {
     @Environment(EnvType.CLIENT)
     public static class Client {
         public static void register() {
-            ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-                dispatcher.register(ClientCommandManager.literal("owo-hud-inspect")
-                        .executes(context -> {
-                            MinecraftClient.getInstance().setScreen(new HudInspectorScreen());
-                            return 0;
-                        }));
+            var dispatcher = ClientCommandManager.DISPATCHER;
 
-                if (RenderDoc.isAvailable()) {
-                    dispatcher.register(ClientCommandManager.literal("renderdoc").executes(context -> {
-                        MinecraftClient.getInstance().setScreen(new RenderdocScreen());
-                        return 1;
-                    }).then(ClientCommandManager.literal("comment")
-                            .then(ClientCommandManager.argument("capture_index", IntegerArgumentType.integer(0))
-                                    .then(ClientCommandManager.argument("comment", StringArgumentType.greedyString())
-                                            .executes(context -> {
-                                                var capture = RenderDoc.getCapture(IntegerArgumentType.getInteger(context, "capture_index"));
-                                                if (capture == null) {
-                                                    context.getSource().sendError(TextOps.concat(Owo.PREFIX, Text.of("no such capture")));
-                                                    return 0;
-                                                }
+            dispatcher.register(ClientCommandManager.literal("owo-hud-inspect")
+                    .executes(context -> {
+                        MinecraftClient.getInstance().setScreen(new HudInspectorScreen());
+                        return 0;
+                    }));
 
-                                                RenderDoc.setCaptureComments(capture, StringArgumentType.getString(context, "comment"));
-                                                context.getSource().sendFeedback(TextOps.concat(Owo.PREFIX, Text.of("comment updated")));
+            if (RenderDoc.isAvailable()) {
+                dispatcher.register(ClientCommandManager.literal("renderdoc").executes(context -> {
+                    MinecraftClient.getInstance().setScreen(new RenderdocScreen());
+                    return 1;
+                }).then(ClientCommandManager.literal("comment")
+                        .then(ClientCommandManager.argument("capture_index", IntegerArgumentType.integer(0))
+                                .then(ClientCommandManager.argument("comment", StringArgumentType.greedyString())
+                                        .executes(context -> {
+                                            var capture = RenderDoc.getCapture(IntegerArgumentType.getInteger(context, "capture_index"));
+                                            if (capture == null) {
+                                                context.getSource().sendError(TextOps.concat(Owo.PREFIX, Text.of("no such capture")));
+                                                return 0;
+                                            }
 
-                                                return 1;
-                                            })))));
-                }
-            });
+                                            RenderDoc.setCaptureComments(capture, StringArgumentType.getString(context, "comment"));
+                                            context.getSource().sendFeedback(TextOps.concat(Owo.PREFIX, Text.of("comment updated")));
+
+                                            return 1;
+                                        })))));
+            }
         }
     }
 }

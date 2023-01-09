@@ -10,8 +10,9 @@ import net.fabricmc.fabric.impl.item.group.ItemGroupExtensions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.item.*;
 import net.minecraft.tag.TagKey;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.registry.Registry;
@@ -39,7 +40,7 @@ public abstract class OwoItemGroup extends ItemGroup {
 
     public static final BiConsumer<Item, DefaultedList<ItemStack>> DEFAULT_STACK_GENERATOR = (item, stacks) -> stacks.add(item.getDefaultStack());
 
-    protected static final ItemGroupTab PLACEHOLDER_TAB = new ItemGroupTab(Icon.of(Items.AIR), Text.empty(), (bruh) -> {}, ItemGroupTab.DEFAULT_TEXTURE, false);
+    protected static final ItemGroupTab PLACEHOLDER_TAB = new ItemGroupTab(Icon.of(Items.AIR), new LiteralText(""), (bruh) -> {}, ItemGroupTab.DEFAULT_TEXTURE, false);
 
     public final List<ItemGroupTab> tabs = new ArrayList<>();
     public final List<ItemGroupButton> buttons = new ArrayList<>();
@@ -346,11 +347,11 @@ public abstract class OwoItemGroup extends ItemGroup {
         String getTranslationKey(String groupKey);
 
         static Text tooltipFor(ItemGroup group, String component, String componentName) {
-            var groupTranslationKey = group.getDisplayName().getContent() instanceof TranslatableTextContent translatable
+            var groupTranslationKey = group.getDisplayName() instanceof TranslatableText translatable
                     ? translatable.getKey()
                     : group.getDisplayName().getString();
 
-            return Text.translatable(groupTranslationKey + "." + component + "." + componentName);
+            return new TranslatableText(groupTranslationKey + "." + component + "." + componentName);
         }
 
     }

@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -44,19 +45,19 @@ public class EpicHandledScreen extends BaseOwoHandledScreen<FlowLayout, EpicScre
                 Containers.draggable(
                         Sizing.content(), Sizing.content(),
                         Containers.verticalFlow(Sizing.content(), Sizing.content())
-                                .child(Components.label(Text.literal("froge :)"))
+                                .child(Components.label(new LiteralText("foxe :)"))
                                         .horizontalTextAlignment(HorizontalAlignment.CENTER)
                                         .positioning(Positioning.absolute(0, -9))
                                         .horizontalSizing(Sizing.fixed(100)))
-                                .child(Components.entity(Sizing.fixed(100), EntityType.FROG, frogeNbt).scale(.75f).allowMouseRotation(true).tooltip(Text.literal(":)")))
+                                .child(Components.entity(Sizing.fixed(100), EntityType.FOX, frogeNbt).scale(.75f).allowMouseRotation(true).tooltip(new LiteralText(":)")))
                                 .child(Containers.horizontalFlow(Sizing.fixed(100), Sizing.content())
                                         .child(Components.button(Text.of("✔"), (ButtonComponent button) -> {
                                             this.enableSlot(Integer.parseInt(selectBox.getText()));
-                                        }).tooltip(Text.literal("Enable")))
-                                        .child(selectBox.margins(Insets.horizontal(3)).tooltip(Text.literal("Slot Index")))
+                                        }).tooltip(new LiteralText("Enable")))
+                                        .child(selectBox.margins(Insets.horizontal(3)).tooltip(new LiteralText("Slot Index")))
                                         .child(Components.button(Text.of("❌"), (ButtonComponent button) -> {
                                             this.disableSlot(Integer.parseInt(selectBox.getText()));
-                                        }).tooltip(Text.literal("Disable"))).verticalAlignment(VerticalAlignment.CENTER).horizontalAlignment(HorizontalAlignment.CENTER))
+                                        }).tooltip(new LiteralText("Disable"))).verticalAlignment(VerticalAlignment.CENTER).horizontalAlignment(HorizontalAlignment.CENTER))
                                 .allowOverflow(true)
                 ).alwaysOnTop(true).surface(Surface.DARK_PANEL).padding(Insets.of(5)).allowOverflow(true).positioning(Positioning.absolute(100, 100))
         ).child(
@@ -73,11 +74,11 @@ public class EpicHandledScreen extends BaseOwoHandledScreen<FlowLayout, EpicScre
         ).surface(Surface.VANILLA_TRANSLUCENT).verticalAlignment(VerticalAlignment.CENTER).horizontalAlignment(HorizontalAlignment.CENTER);
 
         rootComponent.child(
-                (numberLabel = Components.label(Text.literal(handler.epicNumber.get())))
+                (numberLabel = Components.label(new LiteralText(handler.epicNumber.get())))
                         .positioning(Positioning.absolute(0, 0))
         );
 
-        handler.epicNumber.observe(value -> numberLabel.text(Text.literal(value)));
+        handler.epicNumber.observe(value -> numberLabel.text(new LiteralText(value)));
     }
 
     @Override

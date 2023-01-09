@@ -1,14 +1,14 @@
 package io.wispforest.owo.text;
 
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.text.TranslatableText;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TranslationContext {
-    private static final ThreadLocal<List<TranslatableTextContent>> translationStack = ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<TranslatableText>> translationStack = ThreadLocal.withInitial(ArrayList::new);
 
-    public static boolean pushContent(TranslatableTextContent content) {
+    public static boolean pushContent(TranslatableText content) {
         var stack = translationStack.get();
 
         for (int i = 0; i < stack.size(); i++) {
@@ -27,7 +27,7 @@ public class TranslationContext {
         stack.remove(stack.size() - 1);
     }
 
-    public static TranslatableTextContent getCurrent() {
+    public static TranslatableText getCurrent() {
         var stack = translationStack.get();
 
         if (stack.size() <= 0)

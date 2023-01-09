@@ -24,11 +24,12 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AllayEntity;
+import net.minecraft.entity.passive.AxolotlEntity;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
@@ -51,8 +52,8 @@ public class UwuClient implements ClientModInitializer {
         final Supplier<Component> hudComponent = () ->
                 Containers.verticalFlow(Sizing.content(), Sizing.content())
                         .child(Components.item(Items.DIAMOND.getDefaultStack()).margins(Insets.of(3)))
-                        .child(Components.label(Text.literal("epic stuff in hud")))
-                        .child(Components.entity(Sizing.fixed(50), EntityType.ALLAY, null))
+                        .child(Components.label(new LiteralText("epic stuff in hud")))
+                        .child(Components.entity(Sizing.fixed(50), EntityType.AXOLOTL, null))
                         .alignment(HorizontalAlignment.CENTER, VerticalAlignment.CENTER)
                         .padding(Insets.of(5))
                         .surface(Surface.PANEL)
@@ -94,7 +95,7 @@ public class UwuClient implements ClientModInitializer {
         Layers.add(Containers::verticalFlow, instance -> {
             instance.adapter.rootComponent.child(
                     Containers.horizontalFlow(Sizing.content(), Sizing.content())
-                            .child(Components.entity(Sizing.fixed(20), EntityType.ALLAY, null).<EntityComponent<AllayEntity>>configure(component -> {
+                            .child(Components.entity(Sizing.fixed(20), EntityType.AXOLOTL, null).<EntityComponent<AxolotlEntity>>configure(component -> {
                                 component.allowMouseRotation(true)
                                         .scale(.75f);
 
@@ -102,7 +103,7 @@ public class UwuClient implements ClientModInitializer {
                                     UISounds.playInteractionSound();
                                     return true;
                                 });
-                            })).child(Components.textBox(Sizing.fixed(100), "allay text").<TextFieldWidget>configure(textBox -> {
+                            })).child(Components.textBox(Sizing.fixed(100), "axolotl text").<TextFieldWidget>configure(textBox -> {
                                 textBox.verticalSizing(Sizing.fixed(9));
                                 textBox.setDrawsBackground(false);
                             })).<FlowLayout>configure(layout -> {
@@ -110,7 +111,7 @@ public class UwuClient implements ClientModInitializer {
 
                                 instance.alignComponentToWidget(widget -> {
                                     if (!(widget instanceof ButtonWidget button)) return false;
-                                    return button.getMessage().getContent() instanceof TranslatableTextContent translatable && translatable.getKey().equals("menu.reportBugs");
+                                    return button.getMessage() instanceof TranslatableText translatable && translatable.getKey().equals("menu.reportBugs");
                                 }, Layer.Instance.AnchorSide.RIGHT, 0, layout);
                             })
             );

@@ -5,7 +5,9 @@ import io.wispforest.owo.ui.container.*;
 import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Sizing;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import org.w3c.dom.Element;
@@ -190,8 +192,8 @@ public class UIParsing {
      */
     public static Text parseText(Element element) {
         return element.getAttribute("translate").equalsIgnoreCase("true")
-                ? Text.translatable(element.getTextContent())
-                : Text.literal(element.getTextContent());
+                ? new TranslatableText(element.getTextContent())
+                : new LiteralText(element.getTextContent());
     }
 
     public static <E extends Enum<E>> Function<Element, E> parseEnum(Class<E> enumClass) {
@@ -295,10 +297,10 @@ public class UIParsing {
         registerFactory("item", element -> Components.item(ItemStack.EMPTY));
 
         // Widgets
-        registerFactory("label", element -> Components.label(Text.empty()));
+        registerFactory("label", element -> Components.label(Text.of("")));
         registerFactory("box", element -> Components.box(Sizing.content(), Sizing.content()));
-        registerFactory("button", element -> Components.button(Text.empty(), (ButtonComponent button) -> {}));
-        registerFactory("checkbox", element -> Components.checkbox(Text.empty()));
+        registerFactory("button", element -> Components.button(Text.of(""), (ButtonComponent button) -> {}));
+        registerFactory("checkbox", element -> Components.checkbox(Text.of("")));
         registerFactory("text-box", element -> Components.textBox(Sizing.content()));
         registerFactory("slider", element -> Components.slider(Sizing.content()));
         registerFactory("discrete-slider", DiscreteSliderComponent::parse);

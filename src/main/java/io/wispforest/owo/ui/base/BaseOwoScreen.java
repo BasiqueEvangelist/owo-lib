@@ -7,6 +7,7 @@ import io.wispforest.owo.ui.util.UIErrorToast;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +50,7 @@ public abstract class BaseOwoScreen<R extends ParentComponent> extends Screen {
     }
 
     protected BaseOwoScreen() {
-        this(Text.empty());
+        this(new LiteralText(""));
     }
 
     /**

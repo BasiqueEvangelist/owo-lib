@@ -23,7 +23,7 @@ public class DrawableHelperMixin {
         }
     }
 
-    @Inject(method = "drawTexturedQuad", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BufferBuilder;end()Lnet/minecraft/client/render/BufferBuilder$BuiltBuffer;"), cancellable = true)
+    @Inject(method = "drawTexturedQuad", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BufferBuilder;end()V"), cancellable = true)
     private static void skipDraw(Matrix4f matrix, int x0, int x1, int y0, int y1, int z, float u0, float u1, float v0, float v1, CallbackInfo ci) {
         if (Drawer.recording()) ci.cancel();
     }
