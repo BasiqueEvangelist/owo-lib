@@ -18,6 +18,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Pair;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
@@ -64,6 +65,8 @@ public abstract class OwoWindow<R extends ParentComponent> extends SupportsFeatu
     private int deltaX = 0;
     private int deltaY = 0;
     private int activeButton = -1;
+
+    private boolean cursorLocked = false;
 
     private final int[] globalX = new int[1];
     private final int[] globalY = new int[1];
@@ -190,6 +193,12 @@ public abstract class OwoWindow<R extends ParentComponent> extends SupportsFeatu
         })));
 
         glfwSetCursorPosCallback(handle, stowAndReturn(GLFWCursorPosCallback.create((window, xpos, ypos) -> {
+            if (cursorLocked) {
+                this.mouseMoved(xpos - mouseX * scaleFactor, ypos - mouseY * scaleFactor);
+                GLFW.glfwSetCursorPos(handle(), mouseX * scaleFactor, mouseY * scaleFactor);
+                return;
+            }
+
             int newX = (int) (xpos / scaleFactor);
             int newY = (int) (ypos / scaleFactor);
 
@@ -263,6 +272,32 @@ public abstract class OwoWindow<R extends ParentComponent> extends SupportsFeatu
         }
 
         OpenWindows.add(this);
+    }
+
+    public void mouseMoved(double xDelta, double yDelta) {
+
+    }
+
+    public boolean cursorLocked() {
+        return cursorLocked;
+    }
+
+    public void lockCursor() {
+        if (cursorLocked) return;
+
+        this.cursorLocked = true;
+        this.mouseX = scaledWidth / 2;
+        this.mouseY = scaledHeight / 2;
+        InputUtil.setCursorParameters(handle, InputUtil.GLFW_CURSOR_DISABLED, this.mouseX * scaleFactor, this.mouseY * scaleFactor);
+    }
+
+    public void unlockCursor() {
+        if (!cursorLocked) return;
+
+        this.mouseX = scaledWidth / 2;
+        this.mouseY = scaledHeight / 2;
+        InputUtil.setCursorParameters(handle, InputUtil.GLFW_CURSOR_NORMAL, this.mouseX * scaleFactor, this.mouseY * scaleFactor);
+        this.cursorLocked = false;
     }
 
     private <T extends NativeResource> T stowAndReturn(T resource) {
