@@ -20,6 +20,7 @@ import io.wispforest.owo.braid.widgets.label.Label;
 import io.wispforest.owo.braid.widgets.label.LabelStyle;
 import io.wispforest.owo.braid.widgets.scroll.ScrollController;
 import io.wispforest.owo.braid.widgets.scroll.Scrollable;
+import io.wispforest.owo.braid.widgets.slider.MessageRangeSlider;
 import io.wispforest.owo.braid.widgets.slider.MessageSlider;
 import io.wispforest.owo.braid.widgets.slider.MessageXlyder;
 import io.wispforest.owo.braid.widgets.slider.Slider;
@@ -337,7 +338,7 @@ public class TestSelector extends StatefulWidget {
                         ),
                         new SplitPane(
                             new Box(
-                                Color.WHITE.interpolate(Color.ofArgb(0), .5f),
+                                Color.RED.interpolate(Color.ofArgb(0), .5f),
                                 new Label(Text.literal("more text here"))
                             ),
                             new Box(
