@@ -12,9 +12,8 @@ import io.wispforest.owo.braid.widgets.EntityWidget;
 import io.wispforest.owo.braid.widgets.ItemStackWidget;
 import io.wispforest.owo.braid.widgets.basic.*;
 import io.wispforest.owo.braid.widgets.basic.Stack;
-import io.wispforest.owo.braid.widgets.basic.action.Actions;
+import io.wispforest.owo.braid.widgets.button.Button;
 import io.wispforest.owo.braid.widgets.button.MessageButton;
-import io.wispforest.owo.braid.widgets.button.RawButton;
 import io.wispforest.owo.braid.widgets.drag.DragArena;
 import io.wispforest.owo.braid.widgets.drag.DragArenaElement;
 import io.wispforest.owo.braid.widgets.flex.*;
@@ -23,6 +22,8 @@ import io.wispforest.owo.braid.widgets.label.LabelStyle;
 import io.wispforest.owo.braid.widgets.scroll.ScrollController;
 import io.wispforest.owo.braid.widgets.scroll.Scrollable;
 import io.wispforest.owo.braid.widgets.scroll.VerticallyScrollable;
+import io.wispforest.owo.braid.widgets.sharedstate.ShareableState;
+import io.wispforest.owo.braid.widgets.sharedstate.SharedState;
 import io.wispforest.owo.braid.widgets.slider.*;
 import io.wispforest.owo.braid.widgets.splitpane.MultiSplitPane;
 import io.wispforest.owo.braid.widgets.textinput.TextBox;
@@ -32,7 +33,6 @@ import io.wispforest.owo.braid.widgets.window.Window;
 import io.wispforest.owo.braid.widgets.window.WindowController;
 import io.wispforest.owo.ui.component.BraidComponent;
 import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.component.EntityComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.core.Color;
@@ -65,7 +65,7 @@ import java.util.function.DoubleFunction;
 public class TestSelector extends StatefulWidget {
 
     public enum Tests {
-        COUNTER, FLEX, DRAGGING, SPLIT_PANE, SLIDERS, TEXT_INPUT, BURNING_CHYZ, SCROLLING, INPUT, CYCLING, VANILLA
+        COUNTER, FLEX, DRAGGING, SPLIT_PANE, SLIDERS, TEXT_INPUT, BURNING_CHYZ, SCROLLING, INPUT, CYCLING, VANILLA, SHARED_STATE
     }
 
     @Override
@@ -107,6 +107,7 @@ public class TestSelector extends StatefulWidget {
                         case INPUT -> new InputTest();
                         case CYCLING -> new CyclingTest();
                         case VANILLA -> new VanillaTest();
+                        case SHARED_STATE -> new SharedStateTest();
                         case null -> new Center(new Label(Text.literal("select a test")));
                     }
                 ),
@@ -400,31 +401,45 @@ public class TestSelector extends StatefulWidget {
                             ? new Column(
                             MainAxisAlignment.START,
                             CrossAxisAlignment.CENTER,
-                            new Row(
-                                MainAxisAlignment.START,
-                                CrossAxisAlignment.CENTER,
-                                new Label(Text.literal("Discrete")),
-                                new Padding(Insets.all(10)),
-                                new Label(Text.literal("Smooth"))
-                            ),
-                            new Row(
-                                MainAxisAlignment.START,
-                                CrossAxisAlignment.CENTER,
-                                new Label(Text.literal("Basic")),
-                                new Padding(Insets.all(10)),
-                                new CoolSlider(2.0, value -> Text.literal("v: " + formatDouble(value))),
-                                new Padding(Insets.all(10)),
-                                new CoolSlider(null, value -> Text.literal("v: " + formatDouble(value)))
-                            ),
                             new Padding(Insets.all(10)),
-                            new Row(
-                                MainAxisAlignment.START,
-                                CrossAxisAlignment.CENTER,
-                                new Label(Text.literal("XY")),
-                                new Padding(Insets.all(10)),
-                                new CoolXlyder(2.0, 2.0, (x, y) -> Text.literal("x: " + formatDouble(x) + "\ny: " + formatDouble(y))),
-                                new Padding(Insets.all(10)),
-                                new CoolXlyder(null, null, (x, y) -> Text.literal("x: " + formatDouble(x) + "\ny: " + formatDouble(y)))
+                            List.of(
+                                new Row(
+                                    MainAxisAlignment.START,
+                                    CrossAxisAlignment.CENTER,
+                                    new Label(Text.literal("Discrete")),
+                                    new Padding(Insets.all(10)),
+                                    new Label(Text.literal("Smooth"))
+                                ),
+                                new Row(
+                                    MainAxisAlignment.START,
+                                    CrossAxisAlignment.CENTER,
+                                    new Padding(Insets.all(10)),
+                                    List.of(
+                                        new Label(Text.literal("Basic")),
+                                        new CoolSlider(2.0, value -> Text.literal("v: " + formatDouble(value))),
+                                        new CoolSlider(null, value -> Text.literal("v: " + formatDouble(value)))
+                                    )
+                                ),
+                                new Row(
+                                    MainAxisAlignment.START,
+                                    CrossAxisAlignment.CENTER,
+                                    new Padding(Insets.all(10)),
+                                    List.of(
+                                        new Label(Text.literal("XY")),
+                                        new CoolXlyder(2.0, 2.0, (x, y) -> Text.literal("x: " + formatDouble(x) + "\ny: " + formatDouble(y))),
+                                        new CoolXlyder(null, null, (x, y) -> Text.literal("x: " + formatDouble(x) + "\ny: " + formatDouble(y)))
+                                    )
+                                ),
+                                new Row(
+                                    MainAxisAlignment.START,
+                                    CrossAxisAlignment.CENTER,
+                                    new Padding(Insets.all(10)),
+                                    List.of(
+                                        new Label(Text.literal("Range")),
+                                        new CoolRangeSlider(2.0, (min, max) -> Text.literal("v: " + formatDouble(min) + "-" + formatDouble(max))),
+                                        new CoolRangeSlider(null, (min, max) -> Text.literal("v: " + formatDouble(min) + "-" + formatDouble(max)))
+                                    )
+                                )
                             )
                         )
                             : new IncrediblyRedundantSlider()
@@ -548,6 +563,49 @@ public class TestSelector extends StatefulWidget {
         }
     }
 
+    public static class CoolRangeSlider extends StatefulWidget {
+
+        public final @Nullable Double step;
+        public final MessageRangeSlider.RangeSliderMessageProvider textSupplier;
+
+        public CoolRangeSlider(@Nullable Double step, MessageRangeSlider.RangeSliderMessageProvider textSupplier) {
+            this.step = step;
+            this.textSupplier = textSupplier;
+        }
+
+        @Override
+        public WidgetState<CoolRangeSlider> createState() {
+            return new State();
+        }
+
+        public static class State extends WidgetState<CoolRangeSlider> {
+
+            private double minValue = 10;
+            private double maxValue = 20;
+
+            @Override
+            public Widget build(BuildContext context) {
+                return new Sized(
+                    100.0,
+                    20.0,
+                    new MessageRangeSlider(
+                        this.minValue,
+                        this.maxValue,
+                        0,
+                        32,
+                        this.widget().step,
+                        LayoutAxis.HORIZONTAL,
+                        (min, max) -> setState(() -> {
+                            this.minValue = min;
+                            this.maxValue = max;
+                        }),
+                        this.widget().textSupplier.getMessage(this.minValue, this.maxValue)
+                    )
+                );
+            }
+        }
+    }
+
     public static class TextInputTest extends StatefulWidget {
         @Override
         public WidgetState<TextInputTest> createState() {
@@ -607,8 +665,13 @@ public class TestSelector extends StatefulWidget {
 
         @Override
         public Widget build(BuildContext context) {
-            return new RawButton(
-                this.clickCallback,
+            return new MouseArea(
+                widget -> widget
+                    .clickCallback((x, y, button) -> {
+                        this.clickCallback.run();
+                        UISounds.playButtonSound();
+                    })
+                    .cursorStyle(CursorStyle.HAND),
                 new Stack(
                     new Center(
                         new Sized(
@@ -950,7 +1013,8 @@ public class TestSelector extends StatefulWidget {
                                                     .keyUpCallback((key, modifiers) -> this.addToList(getKeyName(key).append(" released")))
                                                     .focusGainedCallback(() -> this.addToList(Text.literal("Focus gained")))
                                                     .focusLostCallback(() -> this.addToList(Text.literal("Focus lost")))
-                                                    .charCallback((charCode, modifiers) -> this.addToList(Text.literal("Character typed: \"" + (char) charCode + "\""))),
+                                                    .charCallback((charCode, modifiers) -> this.addToList(Text.literal("Character typed: \"" + (char) charCode + "\"")))
+                                            ,
                                             new Panel(
                                                 OwoUIDrawContext.PANEL_INSET_NINE_PATCH_TEXTURE,
                                                 new VerticallyScrollable(
@@ -970,12 +1034,11 @@ public class TestSelector extends StatefulWidget {
                 );
             }
 
-            private boolean addToList(Text text) {
+            private void addToList(Text text) {
                 this.setState(() -> {
                     this.inputs.add(text);
                     this.controller.setOffset(this.controller.maxOffset());
                 });
-                return false; // return false to allow other shit to happen:tm:
             }
 
             private MutableText getKeyName(int key) {
@@ -1191,6 +1254,95 @@ public class TestSelector extends StatefulWidget {
                     )
                 );
             }
+        }
+    }
+
+    public static class SharedStateTest extends StatefulWidget {
+        @Override
+        public WidgetState<SharedStateTest> createState() {
+            return new State();
+        }
+
+        public static class State extends WidgetState<SharedStateTest> {
+            @Override
+            public Widget build(BuildContext context) {
+                return new Sized(
+                    400,
+                    250,
+                    new Column(
+                        new Flexible(new TheTest(false)),
+                        new Flexible(new TheTest(true))
+                    )
+                );
+            }
+
+            public static class TheTest extends StatelessWidget {
+
+                public final boolean nest;
+                public TheTest(boolean nest) {
+                    this.nest = nest;
+                }
+
+                @Override
+                public Widget build(BuildContext context) {
+                    return new SharedState<>(
+                        CounterState::new,
+                        new Row(
+                            new Flexible(new LeftBody()),
+                            new Flexible(new Center(new RightBody())),
+                            this.nest ? new Flexible(2, new TheTest(false)) : new Padding(Insets.none())
+                        )
+                    );
+                }
+            }
+
+            public static class LeftBody extends StatelessWidget {
+                @Override
+                public Widget build(BuildContext context) {
+                    System.out.println("panel rebuild");
+                    return new Panel(
+                        SharedState.select(context, CounterState.class, state -> state.dark)
+                            ? OwoUIDrawContext.DARK_PANEL_NINE_PATCH_TEXTURE
+                            : OwoUIDrawContext.PANEL_NINE_PATCH_TEXTURE,
+                        new CounterText()
+                    );
+                }
+            }
+
+            public static class RightBody extends StatelessWidget {
+                @Override
+                public Widget build(BuildContext context) {
+                    return new Column(
+                        new Button(
+                            () -> {
+                                SharedState.set(context, CounterState.class, state -> state.count += 1);
+                                return true;
+                            },
+                            new Label(Text.literal("increment"))
+                        ),
+                        new Button(
+                            () -> {
+                                SharedState.set(context, CounterState.class, state -> state.dark = !state.dark);
+                                return true;
+                            },
+                            new Label(Text.literal("toggle darkness"))
+                        )
+                    );
+                }
+            }
+
+            public static class CounterText extends StatelessWidget {
+                @Override
+                public Widget build(BuildContext context) {
+                    System.out.println("text rebuild");
+                    return new Label(Text.literal("current state: " + SharedState.select(context, CounterState.class, state -> state.count)));
+                }
+            }
+        }
+
+        public static class CounterState extends ShareableState {
+            public int count = 0;
+            public boolean dark = false;
         }
     }
 }
