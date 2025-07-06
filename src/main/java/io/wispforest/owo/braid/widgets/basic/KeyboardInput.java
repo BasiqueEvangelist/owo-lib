@@ -102,7 +102,7 @@ public class KeyboardInput extends SingleChildInstanceWidget {
         void onFocusLost();
     }
 
-    public static class Instance extends SingleChildWidgetInstance<KeyboardInput> implements KeyboardListener {
+    public static class Instance extends SingleChildWidgetInstance.ShrinkWrap<KeyboardInput> implements KeyboardListener {
 
         public Instance(KeyboardInput widget) {
             super(widget);
