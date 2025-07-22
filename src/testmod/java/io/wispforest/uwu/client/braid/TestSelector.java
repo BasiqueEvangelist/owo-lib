@@ -12,14 +12,11 @@ import io.wispforest.owo.braid.widgets.EntityWidget;
 import io.wispforest.owo.braid.widgets.ItemStackWidget;
 import io.wispforest.owo.braid.widgets.SpriteWidget;
 import io.wispforest.owo.braid.widgets.basic.*;
-import io.wispforest.owo.braid.widgets.basic.action.ActionTrigger;
-import io.wispforest.owo.braid.widgets.basic.action.Actions;
 import io.wispforest.owo.braid.widgets.button.Button;
 import io.wispforest.owo.braid.widgets.button.MessageButton;
 import io.wispforest.owo.braid.widgets.checkbox.BraidCheckbox;
 import io.wispforest.owo.braid.widgets.checkbox.Checkbox;
 import io.wispforest.owo.braid.widgets.checkbox.RawCheckbox;
-import io.wispforest.owo.braid.widgets.button.RawButton;
 import io.wispforest.owo.braid.widgets.drag.DragArena;
 import io.wispforest.owo.braid.widgets.drag.DragArenaElement;
 import io.wispforest.owo.braid.widgets.flex.*;
@@ -49,6 +46,7 @@ import io.wispforest.owo.ui.core.Color;
 import io.wispforest.owo.ui.core.OwoUIAdapter;
 import io.wispforest.owo.ui.core.OwoUIDrawContext;
 import io.wispforest.owo.ui.core.Sizing;
+import io.wispforest.owo.ui.util.UISounds;
 import io.wispforest.owo.util.Wisdom;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -73,10 +71,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-
 import java.util.*;
 import java.util.function.DoubleFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TestSelector extends StatefulWidget {
@@ -109,6 +106,33 @@ public class TestSelector extends StatefulWidget {
         public Widget build(BuildContext context) {
             //TODO read that vvvv
             System.out.println("reminder to decide how to handle mouse buttons in, buttons, sliders, text inputs, windows etc");
+
+            var buttons = Arrays.stream(Tests.values()).map(test -> {
+                if (test == Tests.BURNING_CHYZ) {
+                    return new BurningChyzButton(this.chyz, () -> setState(() -> this.test = Tests.BURNING_CHYZ));
+                } else {
+                    return (Widget) new MessageButton(
+                        Text.literal(test.name().toLowerCase(Locale.ROOT).replace('_', ' ')),
+                        test != this.test ? () -> setState(() -> this.test = test) : null
+                    );
+                }
+            }).collect(Collectors.toList());
+
+            buttons.add(
+                new MessageButton(
+                    Text.literal("window"),
+                    () -> BraidWindow.open(
+                        "window moment??",
+                        1200,
+                        800,
+                        new Box(
+                            Color.ofRgb(0x1d2026),
+                            new TestSelector()
+                        )
+                    )
+                )
+            );
+
             return new Stack(
                 Alignment.CENTER,
                 new Center(
@@ -135,26 +159,15 @@ public class TestSelector extends StatefulWidget {
                     Alignment.LEFT,
                     new HitTestTrap(
                         new Padding(
-                            Insets.vertical(50).withLeft(5),
+                            Insets.left(5),
                             new Panel(
                                 OwoUIDrawContext.PANEL_NINE_PATCH_TEXTURE,
                                 new Padding(
                                     Insets.all(8),
-                                    new VerticallyScrollable(
-                                        new IntrinsicWidth(
-                                            new Column(
-                                                new Padding(Insets.all(2)),
-                                                Arrays.stream(Tests.values()).map(test -> {
-                                                    if (test == Tests.BURNING_CHYZ) {
-                                                        return new BurningChyzButton(this.chyz, () -> setState(() -> this.test = Tests.BURNING_CHYZ));
-                                                    } else {
-                                                        return new MessageButton(
-                                                            Text.literal(test.name().toLowerCase(Locale.ROOT).replace('_', ' ')),
-                                                            test != this.test ? () -> setState(() -> this.test = test) : null
-                                                        );
-                                                    }
-                                                }).toList()
-                                            )
+                                    new IntrinsicWidth(
+                                        new Column(
+                                            new Padding(Insets.all(2)),
+                                            buttons
                                         )
                                     )
                                 )
@@ -766,8 +779,13 @@ public class TestSelector extends StatefulWidget {
 
         @Override
         public Widget build(BuildContext context) {
-            return new RawButton(
-                this.clickCallback,
+            return new MouseArea(
+                widget -> widget
+                    .clickCallback((x, y, button) -> {
+                        this.clickCallback.run();
+                        UISounds.playButtonSound();
+                    })
+                    .cursorStyle(CursorStyle.HAND),
                 new Stack(
                     new Center(
                         new Sized(
@@ -1129,14 +1147,13 @@ public class TestSelector extends StatefulWidget {
                 );
             }
 
-            private boolean addToList(Text text) {
+            private void addToList(Text text) {
                 this.setState(() -> {
                     this.inputs.add(text);
                     this.schedulePostLayoutCallback(() -> {
                         this.controller.setOffset(this.controller.maxOffset());
                     });
                 });
-                return false; // return false to allow other shit to happen:tm:
             }
 
             private MutableText getKeyName(int key) {
@@ -1377,7 +1394,6 @@ public class TestSelector extends StatefulWidget {
             public static class TheTest extends StatelessWidget {
 
                 public final boolean nest;
-
                 public TheTest(boolean nest) {
                     this.nest = nest;
                 }
@@ -1414,11 +1430,17 @@ public class TestSelector extends StatefulWidget {
                     return new IntrinsicWidth(
                         new Column(
                             new Button(
-                                () -> SharedState.set(context, CounterState.class, state -> state.count += 1),
+                                () -> {
+                                    SharedState.set(context, CounterState.class, state -> state.count += 1);
+                                    return true;
+                                },
                                 new Label(Text.literal("increment"))
                             ),
                             new Button(
-                                () -> SharedState.set(context, CounterState.class, state -> state.dark = !state.dark),
+                                () -> {
+                                    SharedState.set(context, CounterState.class, state -> state.dark = !state.dark);
+                                    return true;
+                                },
                                 new Label(Text.literal("toggle darkness"))
                             )
                         )
@@ -1508,7 +1530,7 @@ public class TestSelector extends StatefulWidget {
                                 new Sized(20, 20, new Box(Color.WHITE)),
                                 new Sized(60, 40, new Box(Color.WHITE))
                             ),
-                            new Button(() -> {}, new Label(Text.literal("a")))
+                            new Button(() -> true, new Label(Text.literal("a")))
                         )
                     ),
                     new IntrinsicWidth(
@@ -1524,7 +1546,7 @@ public class TestSelector extends StatefulWidget {
                                 new Sized(20, 20, new Box(Color.WHITE)),
                                 new Sized(40, 40, new Box(Color.WHITE))
                             ),
-                            new Button(() -> {}, new Label(Text.literal("a")))
+                            new Button(() -> true, new Label(Text.literal("a")))
                         )
                     )
                 )
@@ -1590,7 +1612,10 @@ public class TestSelector extends StatefulWidget {
                                     20,
                                     20,
                                     new Button(
-                                        () -> setState(() -> this.contributors = this.genContributors()),
+                                        () -> {
+                                            setState(() -> this.contributors = this.genContributors());
+                                            return true;
+                                        },
                                         new Label(LabelStyle.SHADOW, true, Text.literal("☠"))
                                     )
                                 )
@@ -1605,7 +1630,6 @@ public class TestSelector extends StatefulWidget {
             public static class FirePlayer extends StatefulWidget {
 
                 public final GameProfile profile;
-
                 public FirePlayer(GameProfile profile) {this.profile = profile;}
 
                 @Override
@@ -1626,20 +1650,22 @@ public class TestSelector extends StatefulWidget {
 
                     @Override
                     public Widget build(BuildContext context) {
-                        return Actions.click(
+                        return new MouseArea(
                             widget -> widget
+                                .clickCallback((x, y, button) -> {
+                                    this.setState(() -> {
+                                        this.dead = true;
+                                    });
+
+                                    this.displayEntity.setOnFire(false);
+                                    this.displayEntity.setHealth(0f);
+                                    this.displayEntity.deathTime = 20;
+
+                                    MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_PLAYER_DEATH, 1));
+                                })
                                 .enterCallback(!this.dead ? () -> this.displayEntity.setOnFire(true) : null)
                                 .exitCallback(!this.dead ? () -> this.displayEntity.setOnFire(false) : null)
                                 .cursorStyle(!this.dead ? CursorStyle.CROSSHAIR : null),
-                            this.dead ? null : () -> {
-                                this.setState(() -> this.dead = true);
-
-                                this.displayEntity.setOnFire(false);
-                                this.displayEntity.setHealth(0f);
-                                this.displayEntity.deathTime = 20;
-
-                                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_PLAYER_DEATH, 1));
-                            },
                             new Panel(
                                 Identifier.of("uwu", "contributors_panel"),
                                 new Padding(
@@ -1684,10 +1710,15 @@ public class TestSelector extends StatefulWidget {
                     }
 
                     private Widget star(int idx) {
-                        return new Actions(
+                        return new MouseArea(
                             widget -> widget
-                                .addAction(ActionTrigger.CLICK, () -> setState(() -> this.selectedStarCount = idx + 1))
-                                .addAction(ActionTrigger.SECONDARY_CLICK, () -> setState(() -> this.selectedStarCount = 0))
+                                .clickCallback((x, y, button) -> {
+                                    if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                                        setState(() -> this.selectedStarCount = idx + 1);
+                                    } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                                        setState(() -> this.selectedStarCount = 0);
+                                    }
+                                })
                                 .enterCallback(() -> setState(() -> this.hoverStarCount = idx + 1)),
                             new Stack(
                                 new SpriteWidget(

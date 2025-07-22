@@ -1,6 +1,5 @@
 package io.wispforest.owo.braid.widgets.basic;
 
-import io.wispforest.owo.braid.core.Constraints;
 import io.wispforest.owo.braid.core.KeyModifiers;
 import io.wispforest.owo.braid.framework.instance.KeyboardListener;
 import io.wispforest.owo.braid.framework.instance.SingleChildWidgetInstance;
@@ -79,17 +78,17 @@ public class KeyboardInput extends SingleChildInstanceWidget {
 
     @FunctionalInterface
     public interface KeyDownCallback {
-        boolean onKeyDown(int keyCode, KeyModifiers modifiers);
+        void onKeyDown(int keyCode, KeyModifiers modifiers);
     }
 
     @FunctionalInterface
     public interface KeyUpCallback {
-        boolean onKeyUp(int keyCode, KeyModifiers modifiers);
+        void onKeyUp(int keyCode, KeyModifiers modifiers);
     }
 
     @FunctionalInterface
     public interface CharCallback {
-        boolean onChar(int charCode, KeyModifiers modifiers);
+        void onChar(int charCode, KeyModifiers modifiers);
     }
 
     @FunctionalInterface
@@ -109,14 +108,10 @@ public class KeyboardInput extends SingleChildInstanceWidget {
         }
 
         @Override
-        protected void doLayout(Constraints constraints) {
-            this.sizeToChild(constraints, this.child);
-        }
-
-        @Override
         public boolean onKeyDown(int keyCode, KeyModifiers modifiers) {
             if (this.widget.keyDownCallback != null) {
-                return this.widget.keyDownCallback.onKeyDown(keyCode, modifiers);
+                this.widget.keyDownCallback.onKeyDown(keyCode, modifiers);
+                return true;
             }
 
             return false;
@@ -125,7 +120,8 @@ public class KeyboardInput extends SingleChildInstanceWidget {
         @Override
         public boolean onKeyUp(int keyCode, KeyModifiers modifiers) {
             if (this.widget.keyUpCallback != null) {
-                return this.widget.keyUpCallback.onKeyUp(keyCode, modifiers);
+                this.widget.keyUpCallback.onKeyUp(keyCode, modifiers);
+                return true;
             }
 
             return false;
@@ -134,7 +130,8 @@ public class KeyboardInput extends SingleChildInstanceWidget {
         @Override
         public boolean onChar(int charCode, KeyModifiers modifiers) {
             if (this.widget.charCallback != null) {
-                return this.widget.charCallback.onChar(charCode, modifiers);
+                this.widget.charCallback.onChar(charCode, modifiers);
+                return true;
             }
 
             return false;
