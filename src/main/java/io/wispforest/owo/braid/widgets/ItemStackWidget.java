@@ -9,9 +9,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.item.ItemRenderState;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ModelTransformationMode;
 
 import java.util.OptionalDouble;
 
@@ -33,7 +32,6 @@ public class ItemStackWidget extends LeafInstanceWidget {
     public static class Instance extends LeafWidgetInstance<ItemStackWidget> {
 
         public static final Size DEFAULT_SIZE = Size.square(16);
-        protected static final ItemRenderState ITEM_RENDER_STATE = new ItemRenderState();
 
         public Instance(ItemStackWidget widget) {
             super(widget);
@@ -62,9 +60,11 @@ public class ItemStackWidget extends LeafInstanceWidget {
 
         @Override
         public void draw(OwoUIDrawContext ctx) {
-            this.host().client().getItemModelManager().update(ITEM_RENDER_STATE, this.widget.stack, ModelTransformationMode.GUI, false, null, null, 0);
+//            this.host().client().getItemRenderer().update(ITEM_RENDER_STATE, this.widget.stack, ModelTransformationMode.GUI, false, null, null, 0);
 
-            final boolean notSideLit = !ITEM_RENDER_STATE.isSideLit();
+            var client = MinecraftClient.getInstance();
+
+            final boolean notSideLit = !client.getItemRenderer().getModel(this.widget.stack, null, null, 0).isSideLit();
             if (notSideLit) {
                 ctx.draw();
                 DiffuseLighting.disableGuiDepthLighting();
@@ -80,16 +80,15 @@ public class ItemStackWidget extends LeafInstanceWidget {
             // Vanilla scaling and y inversion
             matrices.scale(16, -16, 16);
 
-            var client = MinecraftClient.getInstance();
 
-            ITEM_RENDER_STATE.render(matrices, OwoUIDrawContext.of(ctx).vertexConsumers(), LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
+            client.getItemRenderer().renderItem(this.widget.stack, ModelTransformationMode.GUI, LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, matrices, OwoUIDrawContext.of(ctx).getVertexConsumers(), client.world, 0);
             ctx.draw();
 
             // Clean up
             matrices.pop();
 
             if (this.widget.showOverlay) {
-                ctx.drawStackOverlay(client.textRenderer, this.widget.stack, 0, 0);
+                ctx.drawItemInSlot(client.textRenderer, this.widget.stack, 0, 0);
             }
             if (notSideLit) {
                 DiffuseLighting.enableGuiDepthLighting();

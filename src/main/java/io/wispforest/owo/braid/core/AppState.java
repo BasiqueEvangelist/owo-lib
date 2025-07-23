@@ -484,11 +484,18 @@ public class AppState implements InstanceHost, ProxyHost {
     }
 
     @Override
-    public void scheduleDelayedCallback(Duration delay, Runnable callback) {
+    public long scheduleDelayedCallback(Duration delay, Runnable callback) {
+        var id = ScheduledCallback.nextId++;
         this.callbacks.add(new ScheduledCallback(
             Instant.now().plus(delay),
-            callback
+            callback, id
         ));
+        return id;
+    }
+
+    @Override
+    public void cancelDelayedCallback(long id) {
+        this.callbacks.removeIf(scheduledCallback -> scheduledCallback.id() == id);
     }
 
     @Override
@@ -497,7 +504,10 @@ public class AppState implements InstanceHost, ProxyHost {
     }
 }
 
-record ScheduledCallback(Instant after, Runnable callback) implements Comparable<ScheduledCallback> {
+record ScheduledCallback(Instant after, Runnable callback, long id) implements Comparable<ScheduledCallback> {
+    //"fuck you we starting at 7" -chyz
+    public static long nextId = 7;
+
     @Override
     public int compareTo(@NotNull ScheduledCallback o) {
         return this.after.compareTo(o.after);

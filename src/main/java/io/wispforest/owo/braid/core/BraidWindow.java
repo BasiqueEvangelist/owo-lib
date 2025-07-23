@@ -1,7 +1,7 @@
 package io.wispforest.owo.braid.core;
 
-import com.mojang.blaze3d.systems.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.systems.VertexSorter;
 import io.wispforest.owo.Owo;
 import io.wispforest.owo.braid.core.cursor.CursorController;
 import io.wispforest.owo.braid.core.cursor.CursorStyle;
@@ -59,7 +59,7 @@ public class BraidWindow implements Surface {
 
         this.framebufferWidth = framebufferWidthOut[0];
         this.framebufferHeight = framebufferHeightOut[0];
-        this.remoteFramebuffer = new SimpleFramebuffer(this.framebufferWidth, this.framebufferHeight, true);
+        this.remoteFramebuffer = new SimpleFramebuffer(this.framebufferWidth, this.framebufferHeight, true, MinecraftClient.IS_SYSTEM_MAC);
         this.recreateLocalFbo();
 
         GLFW.glfwSetWindowCloseCallback(this.handle, this.storeNativeResource(GLFWWindowCloseCallback.create(window -> {
@@ -72,7 +72,7 @@ public class BraidWindow implements Surface {
 
             withContext(MinecraftClient.getInstance().getWindow().getHandle(), () -> {
                 this.remoteFramebuffer.delete();
-                this.remoteFramebuffer = new SimpleFramebuffer(this.framebufferWidth, this.framebufferHeight, true);
+                this.remoteFramebuffer = new SimpleFramebuffer(this.framebufferWidth, this.framebufferHeight, true, MinecraftClient.IS_SYSTEM_MAC);
             });
 
             this.recreateLocalFbo();
@@ -275,7 +275,7 @@ public class BraidWindow implements Surface {
     // ---
 
     private Matrix4f projectionBackup;
-    private ProjectionType projectionTypeBackup;
+    private VertexSorter projectionTypeBackup;
 
     @Override
     public void beginRendering() {
@@ -284,18 +284,19 @@ public class BraidWindow implements Surface {
         ScissorStack.pushWindowDimensions(() -> new ScissorStack.WindowDimensions(this.scaleFactor, this.scaledWidth, this.scaledHeight, this.framebufferWidth, this.framebufferHeight));
 
         RenderSystem.clearColor(0f, 0f, 0f, 1f);
-        RenderSystem.clear(GL32.GL_COLOR_BUFFER_BIT | GL32.GL_DEPTH_BUFFER_BIT);
+        RenderSystem.clear(GL32.GL_COLOR_BUFFER_BIT | GL32.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 
         this.projectionBackup = new Matrix4f(RenderSystem.getProjectionMatrix());
-        this.projectionTypeBackup = RenderSystem.getProjectionType();
+        this.projectionTypeBackup = RenderSystem.getVertexSorting();
 
         var projection = new Matrix4f().setOrtho(0, (float) this.framebufferWidth / this.scaleFactor, (float) this.framebufferHeight / this.scaleFactor, 0, 1000, 21000);
-        RenderSystem.setProjectionMatrix(projection, ProjectionType.ORTHOGRAPHIC);
+        RenderSystem.setProjectionMatrix(projection, VertexSorter.BY_Z);
 
         var modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushMatrix();
         modelViewStack.identity();
         modelViewStack.translate(0, 0, -11000);
+        RenderSystem.applyModelViewMatrix();
 
         DiffuseLighting.enableGuiDepthLighting();
     }

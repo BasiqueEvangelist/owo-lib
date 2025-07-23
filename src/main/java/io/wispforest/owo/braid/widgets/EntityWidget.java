@@ -122,7 +122,7 @@ public class EntityWidget extends LeafInstanceWidget {
 
             DiffuseLighting.enableForLevel();
             dispatcher.setRenderShadows(false);
-            dispatcher.render(this.widget.entity, 0, 0, 0, 0, ctx.getMatrices(), ctx.vertexConsumers(), LightmapTextureManager.MAX_LIGHT_COORDINATE);
+            dispatcher.render(this.widget.entity, 0, 0, 0, 0, 0, ctx.getMatrices(), ctx.getVertexConsumers(), LightmapTextureManager.MAX_LIGHT_COORDINATE);
             dispatcher.setRenderShadows(true);
             ctx.draw();
             DiffuseLighting.enableGuiDepthLighting();

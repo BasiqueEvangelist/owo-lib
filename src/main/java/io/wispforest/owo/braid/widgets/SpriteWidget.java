@@ -6,7 +6,6 @@ import io.wispforest.owo.braid.core.Size;
 import io.wispforest.owo.braid.framework.instance.LeafWidgetInstance;
 import io.wispforest.owo.braid.framework.widget.LeafInstanceWidget;
 import io.wispforest.owo.ui.core.OwoUIDrawContext;
-import io.wispforest.owo.ui.core.OwoUIRenderLayers;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.util.Identifier;
@@ -82,13 +81,13 @@ public class SpriteWidget extends LeafInstanceWidget {
                 RenderSystem.defaultBlendFunc();
             }
 
-            ctx.drawSpriteStretched(
-                identifier -> OwoUIRenderLayers.getGuiTextured(identifier, this.widget.blend),
-                this.sprite,
+            ctx.drawSprite(
+                0,
                 0,
                 0,
                 (int) this.transform.width(),
-                (int) this.transform.height()
+                (int) this.transform.height(),
+                this.sprite
             );
 
             if (this.widget.blend) {

@@ -5,7 +5,6 @@ import io.wispforest.owo.braid.framework.instance.OptionalChildWidgetInstance;
 import io.wispforest.owo.braid.framework.widget.OptionalChildInstanceWidget;
 import io.wispforest.owo.braid.framework.widget.Widget;
 import io.wispforest.owo.ui.core.OwoUIDrawContext;
-import io.wispforest.owo.ui.core.OwoUIRenderLayers;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,7 +60,6 @@ public class TextureWidget extends OptionalChildInstanceWidget {
             }
 
             ctx.drawTexture(
-                identifier -> OwoUIRenderLayers.getGuiTextured(identifier, true),
                 widget.texture,
                 0,
                 0,
