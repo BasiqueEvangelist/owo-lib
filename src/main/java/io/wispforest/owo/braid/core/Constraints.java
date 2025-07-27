@@ -145,4 +145,22 @@ public record Constraints(double minWidth, double minHeight, double maxWidth, do
     public Size maxSize() {
         return Size.of(this.maxWidth, this.maxHeight);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Constraints that = (Constraints) o;
+        return Double.compare(minWidth, that.minWidth) == 0 && Double.compare(maxWidth, that.maxWidth) == 0 && Double.compare(minHeight, that.minHeight) == 0 && Double.compare(maxHeight, that.maxHeight) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Double.hashCode(minWidth);
+        result = 31 * result + Double.hashCode(minHeight);
+        result = 31 * result + Double.hashCode(maxWidth);
+        result = 31 * result + Double.hashCode(maxHeight);
+        return result;
+    }
 }

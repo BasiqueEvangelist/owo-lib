@@ -124,6 +124,8 @@ dependencies {
 //    modLocalRuntime("me.shedaniel:RoughlyEnoughItems-fabric:${project.rei_version}")
     modCompileOnly("me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:${project.rei_version}")
     modCompileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}")
+    modCompileOnly("dev.architectury:architectury-fabric:13.0.8")
+    modCompileOnly("me.shedaniel.cloth:basic-math:0.6.1")
 
     modCompileOnly("dev.emi:emi-fabric:${project.emi_version}")
 //    modLocalRuntime("dev.emi:emi-fabric:${project.emi_version}")
